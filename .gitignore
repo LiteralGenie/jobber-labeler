@@ -1,2 +1,5 @@
+src/data/db.sqlite
+src/env/env.ts
+
 .next/
 node_modules
