@@ -1,17 +1,9 @@
+import * as sqlite from "better-sqlite3"
+
 // This table should've been created by the collector repo
-// export function initTable(conn: sqlite.Database) {}
+const TABLE_ID = "indeed_post"
 
-export interface Raw {
-    id: string
-
-    company: string
-    companyId?: string
-    html: string
-    textContent: string
-    title: string
-}
-
-export type ModelProps = {
+export type RawDb = {
     id: string
     createdAt: string
     updatedAt: string
@@ -23,28 +15,28 @@ export type ModelProps = {
     title: string
 }
 
-export class Model implements ModelProps {
-    id!: string
-    createdAt!: string
-    updatedAt!: string
+export interface Model {
+    id: string
+    createdAt: string
+    updatedAt: string
 
-    company!: string
-    companyId!: string | null
-    html!: string
-    textContent!: string
-    title!: string
+    company: string
+    companyId: string | null
+    html: string
+    textContent: string
+    title: string
+}
 
-    constructor(data: ModelProps) {
-        Object.assign(this, data)
-    }
+export function get(conn: sqlite.Database, id: string): Model {
+    return conn
+        .prepare(`SELECT * FROM ${TABLE_ID} WHERE id = ?`)
+        .get(id) as RawDb
+}
 
-    static fromRaw(raw: Raw): Model {
-        const props: ModelProps = {
-            ...raw,
-            companyId: raw.companyId || null,
-            createdAt: "",
-            updatedAt: "",
-        }
-        return new Model(props)
-    }
+export function getAllIds(conn: sqlite.Database): string[] {
+    return (
+        conn.prepare(`SELECT id FROM ${TABLE_ID}`).all() as Array<{
+            id: string
+        }>
+    ).map(({ id }) => id)
 }

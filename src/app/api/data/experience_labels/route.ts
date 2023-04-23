@@ -10,7 +10,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
     const conn = getDb()
-    const data = (await request.json()) as ExperienceLabel.PayloadCreate
-    const model = ExperienceLabel.insert(data, conn)
-    return NextResponse.json({ model })
+    const payload = (await request.json()) as ExperienceLabel.PayloadCreate
+    const data = ExperienceLabel.insert(payload, conn)
+    return NextResponse.json({ data })
 }

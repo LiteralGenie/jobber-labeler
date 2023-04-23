@@ -12,3 +12,7 @@ export function getDb(): sqlite.Database {
 function initTables(conn: sqlite.Database) {
     ExperienceLabel.initTable(conn)
 }
+
+export type RequestParams<T> = {
+    params: T
+}

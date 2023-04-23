@@ -24,17 +24,6 @@ export function initTable(conn: sqlite.Database) {
     ).run()
 }
 
-// User-submitted data
-export interface PayloadCreate {
-    idSample: string
-
-    category: string
-    citations: Array<[number, number]>
-    conditions?: string[]
-    min?: number
-    max?: number
-}
-
 // What's in the DB
 export interface RawDb {
     id: number
@@ -43,12 +32,13 @@ export interface RawDb {
     updatedAt: string
 
     category: string
-    citations: string[]
-    conditions: string[]
+    citations: string
+    conditions: string
     min: number | null
     max: number | null
 }
 
+// Interface we generally interact with
 export interface Model {
     id: number
     idSample: string
@@ -60,6 +50,17 @@ export interface Model {
     conditions: string[]
     min: number | null
     max: number | null
+}
+
+// User-submitted data
+export interface PayloadCreate {
+    idSample: string
+
+    category: string
+    citations: Array<[number, number]>
+    conditions?: string[]
+    min?: number
+    max?: number
 }
 
 export function insert(data: PayloadCreate, conn: sqlite.Database): Model {
@@ -86,10 +87,6 @@ export function insert(data: PayloadCreate, conn: sqlite.Database): Model {
         `
         )
         .run(row)
-    console.log(
-        `SELECT * FROM ${TABLE_ID} WHRE rowid = ?`,
-        result.lastInsertRowid
-    )
     const model = conn
         .prepare(`SELECT * FROM ${TABLE_ID} WHERE rowid = ?`)
         .get(result.lastInsertRowid) as Model
@@ -97,5 +94,11 @@ export function insert(data: PayloadCreate, conn: sqlite.Database): Model {
 }
 
 export function getAll(conn: sqlite.Database): Model[] {
-    return conn.prepare(`SELECT * FROM ${TABLE_ID}`).all() as Model[]
+    return (conn.prepare(`SELECT * FROM ${TABLE_ID}`).all() as RawDb[]).map(
+        (d) => ({
+            ...d,
+            citations: JSON.parse(d.citations),
+            conditions: JSON.parse(d.conditions),
+        })
+    )
 }
