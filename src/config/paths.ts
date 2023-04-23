@@ -11,10 +11,10 @@ let _env = env as Partial<Env>
 })
 
 // Exported paths
-export { SRC_DIR, DATA_DIR, DB_FILE }
 const SRC_DIR = path.dirname(__dirname)
 const DATA_DIR = SRC_DIR + "/data"
 const DB_FILE = _env.DB_FILE || DATA_DIR + "/db.sqlite"
+export default { SRC_DIR, DATA_DIR, DB_FILE }
 
 // Create missing dirs
 ;[SRC_DIR, DATA_DIR]
