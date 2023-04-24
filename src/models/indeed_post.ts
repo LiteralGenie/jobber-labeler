@@ -3,7 +3,7 @@ import * as sqlite from "better-sqlite3"
 // This table should've been created by the collector repo
 const TABLE_ID = "indeed_post"
 
-export type RawDb = {
+type RawDb = {
     id: string
     createdAt: string
     updatedAt: string
@@ -33,10 +33,8 @@ export function get(conn: sqlite.Database, id: string): Model {
         .get(id) as RawDb
 }
 
-export function getAllIds(conn: sqlite.Database): string[] {
-    return (
-        conn.prepare(`SELECT id FROM ${TABLE_ID}`).all() as Array<{
-            id: string
-        }>
-    ).map(({ id }) => id)
+export function getAllIds(conn: sqlite.Database): { id: string }[] {
+    return conn.prepare(`SELECT id FROM ${TABLE_ID}`).all() as Array<{
+        id: string
+    }>
 }

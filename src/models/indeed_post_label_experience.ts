@@ -25,7 +25,7 @@ export function initTable(conn: sqlite.Database) {
 }
 
 // What's in the DB
-export interface RawDb {
+interface RawDb {
     id: number
     idSample: string
     createdAt: string
@@ -84,7 +84,7 @@ export function insert(data: PayloadCreate, conn: sqlite.Database): Model {
             INSERT INTO ${TABLE_ID}
             (idSample,   createdAt,  updatedAt,  category,  citations,  conditions,  min,  max) VALUES
             (:idSample, :createdAt, :updatedAt, :category, :citations, :conditions, :min, :max)
-        `
+            `
         )
         .run(row)
     const model = conn
@@ -93,12 +93,47 @@ export function insert(data: PayloadCreate, conn: sqlite.Database): Model {
     return model
 }
 
-export function getAll(conn: sqlite.Database): Model[] {
-    return (conn.prepare(`SELECT * FROM ${TABLE_ID}`).all() as RawDb[]).map(
-        (d) => ({
-            ...d,
-            citations: JSON.parse(d.citations),
-            conditions: JSON.parse(d.conditions),
+export function get(conn: sqlite.Database, id: number): Model {
+    const row = conn
+        .prepare(`SELECT * FROM ${TABLE_ID} WHERE id = ?`)
+        .get(id) as RawDb
+    return {
+        ...row,
+        citations: JSON.parse(row.citations),
+        conditions: JSON.parse(row.conditions),
+    }
+}
+
+export type Summary = Record<
+    string,
+    { count: number; createdAt: string; idLabel: number }
+>
+export function getAllSummarized(conn: sqlite.Database): Summary {
+    const rows = conn
+        .prepare(
+            `
+            SELECT s.id, COALESCE(l.num_rows, 0) AS count, l.createdAt
+            FROM indeed_post s
+            LEFT JOIN (
+              SELECT idSample, COUNT(*) AS num_rows, MAX(createdAt) AS createdAt
+              FROM ${TABLE_ID}
+              GROUP BY idSample
+            ) l ON s.id = l.idSample;
+            `
+        )
+        .all() as Array<{
+        id: string
+        count: number
+        createdAt: string
+        idLabel: number
+    }>
+
+    return Object.fromEntries(
+        rows.map((r) => {
+            const data = { ...r } as Partial<typeof r>
+            const id = data.id
+            delete data.id
+            return [id, data]
         })
     )
 }

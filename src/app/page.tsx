@@ -7,7 +7,7 @@ import { CssBaseline, ThemeProvider } from "@mui/material"
 import { Provider } from "react-redux"
 import { THEME } from "./theme"
 import { css } from "@emotion/react"
-import Labeler from "@/components/labeler/labeler"
+import ExperienceLabeler from "@/components/experience-labeler/experience-labeler"
 
 export default function Home() {
     return (
@@ -17,7 +17,7 @@ export default function Home() {
                 <div css={contentContainerStyles}>
                     <Sidebar></Sidebar>
                     <main css={contentStyles}>
-                        <Labeler></Labeler>
+                        <ExperienceLabeler></ExperienceLabeler>
                     </main>
                 </div>
             </ThemeProvider>
