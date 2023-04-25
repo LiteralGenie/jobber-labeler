@@ -13,9 +13,9 @@ export const api = createApi({
         }),
 
         // prettier-ignore
-        expLabelSummary: builder.query<ExperienceLabel.Summary, void>({
+        expLabelSummary: builder.query<Record<string,ExperienceLabel.Summary>, void>({
             query: () => "data/experience_labels/summary",
-            transformResponse: ({ data }: { data: ExperienceLabel.Summary }) => data
+            transformResponse: ({ data }: { data: Record<string,ExperienceLabel.Summary> }) => data
         }),
         expLabel: builder.query<ExperienceLabel.Model, number>({
             query: (id) => `data/experience_labels/${id}`,

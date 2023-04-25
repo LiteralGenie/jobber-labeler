@@ -104,36 +104,32 @@ export function get(conn: sqlite.Database, id: number): Model {
     }
 }
 
-export type Summary = Record<
-    string,
-    { count: number; createdAt: string; idLabel: number }
->
-export function getAllSummarized(conn: sqlite.Database): Summary {
+export type Summary = {
+    idSample: string
+    idLabel: number | null
+    count: number
+    createdAt: string | null
+}
+export function getAllSummarized(
+    conn: sqlite.Database
+): Record<string, Summary> {
     const rows = conn
         .prepare(
             `
-            SELECT s.id, COALESCE(l.num_rows, 0) AS count, l.createdAt
+            SELECT s.id as idSample, l.id as idLabel, COALESCE(l.num_rows, 0) AS count, l.createdAt
             FROM indeed_post s
             LEFT JOIN (
-              SELECT idSample, COUNT(*) AS num_rows, MAX(createdAt) AS createdAt
+              SELECT id, idSample, COUNT(*) AS num_rows, MAX(createdAt) AS createdAt
               FROM ${TABLE_ID}
               GROUP BY idSample
             ) l ON s.id = l.idSample;
             `
         )
         .all() as Array<{
-        id: string
+        idSample: string
+        idLabel: number
         count: number
         createdAt: string
-        idLabel: number
     }>
-
-    return Object.fromEntries(
-        rows.map((r) => {
-            const data = { ...r } as Partial<typeof r>
-            const id = data.id
-            delete data.id
-            return [id, data]
-        })
-    )
+    return Object.fromEntries(rows.map((r) => [r.idSample, r]))
 }
