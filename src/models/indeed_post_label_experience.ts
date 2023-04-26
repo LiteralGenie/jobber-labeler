@@ -1,4 +1,5 @@
 import * as sqlite from "better-sqlite3"
+import * as IndeedPost from "./indeed_post"
 
 const TABLE_ID = "indeed_post_label_experience"
 
@@ -25,18 +26,21 @@ export function initTable(conn: sqlite.Database) {
 }
 
 // What's in the DB
-interface RawDb {
-    id: number
-    idSample: string
-    createdAt: string
-    updatedAt: string
+class _RawDb {
+    // This is a class instead of interface so that we can extract the keys into Columns at runtime
+    id!: number
+    idSample!: string
+    createdAt!: string
+    updatedAt!: string
 
-    category: string
-    citations: string
-    conditions: string
-    min: number | null
-    max: number | null
+    category!: string
+    citations!: string
+    conditions!: string
+    min!: number | null
+    max!: number | null
 }
+export interface RawDb extends _RawDb {}
+export const Columns = Object.keys(new _RawDb()) as Readonly<Array<keyof RawDb>>
 
 // Interface we generally interact with
 export interface Model {
@@ -111,12 +115,20 @@ export type Summary = {
     createdAt: string | null
 }
 export function getAllSummarized(
-    conn: sqlite.Database
-): Record<string, Summary> {
+    conn: sqlite.Database,
+    sampleColumns: Array<keyof IndeedPost.RawDb>,
+    labelColumns: Array<keyof RawDb>
+): Summary[] {
+    const SAMPLE_COLUMNS: Array<keyof IndeedPost.RawDb> = []
+
     const rows = conn
         .prepare(
             `
-            SELECT s.id as idSample, l.id as idLabel, COALESCE(l.num_rows, 0) AS count, l.createdAt
+            SELECT 
+                s.id as idSample,
+                l.id as idLabel,
+                COALESCE(l.num_rows, 0) AS count,
+                l.createdAt
             FROM indeed_post s
             LEFT JOIN (
               SELECT id, idSample, COUNT(*) AS num_rows, MAX(createdAt) AS createdAt
