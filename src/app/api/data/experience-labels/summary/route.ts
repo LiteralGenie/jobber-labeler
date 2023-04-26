@@ -11,15 +11,15 @@ export async function GET(req: Request) {
         const params = {
             sampleColumns: rawParams["sample-columns"]?.split(","),
             labelColumns: rawParams["label-columns"]?.split(","),
-            orderBy: rawParams["order-by"],
             sortBy: rawParams["sort-by"],
+            orderBy: rawParams["order-by"],
         }
         const data = ExperienceLabel.getAllSummarized(
             conn,
             params.sampleColumns,
             params.labelColumns,
-            params.orderBy,
-            params.sortBy
+            params.sortBy,
+            params.orderBy
         )
         return NextResponse.json({ data })
     } catch (e) {

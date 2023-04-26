@@ -3,6 +3,8 @@ import * as ExperienceLabel from "@/models/indeed_post_label_experience"
 import * as IndeedPost from "@/models/indeed_post"
 import { ApiData } from "@/utils"
 
+type SummaryEndpointArgs = Omit<ExperienceLabel.SummaryOpts, "conn">
+
 export const api = createApi({
     reducerPath: "api",
     baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3000/api/" }),
@@ -11,11 +13,23 @@ export const api = createApi({
             query: (id) => `data/samples/${id}`,
             transformResponse: ({ data }: ApiData<IndeedPost.Model>) => data,
         }),
-
-        // prettier-ignore
-        expLabelSummary: builder.query<Record<string, ExperienceLabel.Summary>, void>({
-            query: () => "data/experience-labels/summary",
-            transformResponse: ({ data }: { data: Record<string, ExperienceLabel.Summary> }) => data
+        expLabelSummary: builder.query<ExperienceLabel.Summary[], SummaryEndpointArgs>({
+            query: (opts: SummaryEndpointArgs) => {
+                const path = "data/experience-labels/summary"
+                const params = {
+                    ["sample-columns"]: opts.sampleColumns?.join(",") || "",
+                    ["label-columns"]: opts.labelColumns?.join(",") || "",
+                    ["sort-by"]: opts.sortBy,
+                    ["order-by"]: opts.orderBy,
+                }
+                const queryString =
+                    "?" +
+                    Object.entries(params)
+                        .map(([k, v]) => `${k}=${v}`)
+                        .join("&")
+                return path + queryString
+            },
+            transformResponse: ({ data }: { data: ExperienceLabel.Summary[] }) => data,
         }),
         expLabel: builder.query<ExperienceLabel.Model, number>({
             query: (id) => `data/experience-labels/${id}`,

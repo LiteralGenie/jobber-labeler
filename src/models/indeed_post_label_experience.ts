@@ -110,18 +110,35 @@ export function get(conn: sqlite.Database, id: number): Model | undefined {
     }
 }
 
+// Arguments this function will accept, but may possibly cause errors
+export interface RawSummaryOpts {
+    conn: sqlite.Database
+    sampleColumns?: string[]
+    labelColumns?: string[]
+    sortBy: string
+    orderBy: string
+}
+// Arguments this function expects
+export interface SummaryOpts extends RawSummaryOpts {
+    conn: sqlite.Database
+    sampleColumns?: IndeedPost.Column[]
+    labelColumns?: Column[]
+    sortBy: "count"
+    orderBy: "asc" | "desc"
+}
+// Return type
 export type Summary = {
     sample: Partial<IndeedPost.Model> | Record<keyof IndeedPost.Model, null>
     label: Partial<Model> | Record<keyof Model, null>
     count: number
 }
-export function getAllSummarized(
-    conn: sqlite.Database,
-    sampleColumns: string[] | undefined,
-    labelColumns: string[] | undefined,
-    orderBy: string = "count",
-    sortBy: string = "asc"
-): Summary[] {
+export function getAllSummarized({
+    conn,
+    sampleColumns,
+    labelColumns,
+    sortBy = "count",
+    orderBy = "asc",
+}: SummaryOpts): Summary[] {
     // Validate
     const checkedSampleColumns = checkWhitelist(
         sampleColumns || [],
@@ -150,7 +167,7 @@ export function getAllSummarized(
         .join(",")
 
     // Sort order
-    const orderByQuery = `ORDER BY ${orderBy} ${sortBy.toUpperCase()}`
+    const orderByQuery = `ORDER BY ${sortBy} ${orderBy.toUpperCase()}`
 
     // Run query
     const rows = conn
