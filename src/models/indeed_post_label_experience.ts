@@ -1,5 +1,6 @@
 import * as sqlite from "better-sqlite3"
 import * as IndeedPost from "./indeed_post"
+import { ValidationError, ValueOf, checkWhitelist, mergeDistinct } from "@/utils"
 
 const TABLE_ID = "indeed_post_label_experience"
 
@@ -40,7 +41,8 @@ class _RawDb {
     max!: number | null
 }
 export interface RawDb extends _RawDb {}
-export const Columns = Object.keys(new _RawDb()) as Readonly<Array<keyof RawDb>>
+export type Column = keyof RawDb
+export const Columns = Object.keys(new _RawDb()) as Readonly<Column[]>
 
 // Interface we generally interact with
 export interface Model {
@@ -98,9 +100,7 @@ export function insert(data: PayloadCreate, conn: sqlite.Database): Model {
 }
 
 export function get(conn: sqlite.Database, id: number): Model {
-    const row = conn
-        .prepare(`SELECT * FROM ${TABLE_ID} WHERE id = ?`)
-        .get(id) as RawDb
+    const row = conn.prepare(`SELECT * FROM ${TABLE_ID} WHERE id = ?`).get(id) as RawDb
     return {
         ...row,
         citations: JSON.parse(row.citations),
@@ -109,39 +109,94 @@ export function get(conn: sqlite.Database, id: number): Model {
 }
 
 export type Summary = {
-    idSample: string
-    idLabel: number | null
+    sample: Partial<IndeedPost.Model>
+    label: Partial<Model>
     count: number
-    createdAt: string | null
 }
 export function getAllSummarized(
     conn: sqlite.Database,
-    sampleColumns: Array<keyof IndeedPost.RawDb>,
-    labelColumns: Array<keyof RawDb>
+    sampleColumns: IndeedPost.Column[],
+    labelColumns: Column[],
+    orderBy: "count" = "count",
+    sortBy: "asc" | "desc" = "asc"
 ): Summary[] {
-    const SAMPLE_COLUMNS: Array<keyof IndeedPost.RawDb> = []
+    // Validate
+    checkWhitelist(sampleColumns, IndeedPost.Columns, "Invalid sample columns:")
+    checkWhitelist(labelColumns, Columns, "Invalid label columns:")
+    checkWhitelist([orderBy], ["count"], "Invalid orderBy type:")
+    checkWhitelist([sortBy], ["asc", "desc"], "Invalid sort type:")
 
+    // Required columns
+    const queryColumnsSamples = mergeDistinct(sampleColumns, ["id"] as IndeedPost.Column[])
+    const queryColumnsLabels = mergeDistinct(labelColumns, ["idSample", "createdAt"] as Column[])
+    const sampleColumnQuery = queryColumnsSamples
+        .map((name) => `s.${name} as __sample__${name}`)
+        .join(",")
+    const labelColumnQuery = queryColumnsLabels
+        .map((name) => `l.${name} as __label__${name}`)
+        .join(",")
+
+    // Sort order
+    const orderByQuery = `ORDER BY ${orderBy} ${sortBy.toUpperCase()}`
+
+    // Run query
     const rows = conn
         .prepare(
+            // The MAX(createdAt) ensures we get the non-aggregated cols from the most recent label
             `
-            SELECT 
-                s.id as idSample,
-                l.id as idLabel,
-                COALESCE(l.num_rows, 0) AS count,
-                l.createdAt
-            FROM indeed_post s
-            LEFT JOIN (
-              SELECT id, idSample, COUNT(*) AS num_rows, MAX(createdAt) AS createdAt
-              FROM ${TABLE_ID}
-              GROUP BY idSample
-            ) l ON s.id = l.idSample;
+            SELECT *, COUNT(__label__idSample) as count, MAX(__label__createdAt) FROM (
+                SELECT 
+                    ${labelColumnQuery},
+                    ${sampleColumnQuery}
+                FROM ${IndeedPost.TABLE_ID} s
+                LEFT JOIN ${TABLE_ID} l ON s.id = l.idSample
+              )
+            GROUP BY __sample__id;
+            ${orderByQuery}
             `
         )
-        .all() as Array<{
-        idSample: string
-        idLabel: number
-        count: number
-        createdAt: string
-    }>
-    return Object.fromEntries(rows.map((r) => [r.idSample, r]))
+        .all() as Array<{ count: number } & any>
+
+    const result: Summary[] = rows.map((r) => {
+        // Rename columns that were prefixed with table name
+        const sample = extractRawFromQueryResult<IndeedPost.RawDb>(r, "__sample__")
+        const label = extractRawFromQueryResult<RawDb>(r, "__label__")
+
+        // Build result
+        const obj: Summary = {
+            sample: sample,
+            label: {
+                ...label,
+                conditions: JSON.parse(label.conditions as string),
+                citations: JSON.parse(label.citations as string),
+            },
+            count: r.count,
+        }
+
+        // Filter out unrequested columns
+        obj.sample = filterProperties(obj.sample, sampleColumns)
+        obj.label = filterProperties(obj.label, labelColumns)
+
+        return obj
+    })
+    return result
+}
+
+function extractRawFromQueryResult<R>(row: any, tablePrefix: string): Partial<R> {
+    const renamed: Partial<R> = {}
+    Object.entries(row).forEach(([k, v]) => {
+        let key = k
+        if (k.startsWith(tablePrefix)) {
+            key = k.replace(tablePrefix, "")
+        }
+        // @ts-ignore
+        renamed[key] = v
+    })
+
+    return renamed
+}
+
+function filterProperties<T>(obj: T, props: Array<keyof T>): T {
+    const kvs = props.map((k) => [k, obj[k]])
+    return Object.fromEntries(kvs)
 }
