@@ -6,15 +6,15 @@ export const TABLE_ID = "indeed_post"
 // What's in the DB
 class _RawDb {
     // This is a class instead of interface so that we can extract the keys into Columns at runtime
-    id!: string
-    createdAt!: string
-    updatedAt!: string
+    id: string = ""
+    createdAt: string = ""
+    updatedAt: string = ""
 
-    company!: string
-    companyId!: string | null
-    html!: string
-    textContent!: string
-    title!: string
+    company: string = ""
+    companyId: string | null = ""
+    html: string = ""
+    textContent: string = ""
+    title: string = ""
 }
 export interface RawDb extends _RawDb {}
 export type Column = keyof RawDb

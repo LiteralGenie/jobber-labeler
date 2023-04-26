@@ -8,14 +8,11 @@ import { useState } from "react"
 
 export default function ExperienceLabeler() {
     const labelResult = api.useExpLabelSummaryQuery()
-    const [sampleId, setSampleId] = useState<string | undefined | null>(
-        undefined
-    )
+    const [sampleId, setSampleId] = useState<string | undefined | null>(undefined)
 
     // Init sampleId
     if (!labelResult.isLoading && sampleId == undefined) {
         const firstSampleId = Object.keys(labelResult.data || {})[0]
-        console.log("set first", firstSampleId)
         setSampleId(firstSampleId || null)
     }
 
@@ -23,9 +20,7 @@ export default function ExperienceLabeler() {
         <div css={styles}>
             {sampleId && (
                 <div>
-                    <Highlighter
-                        summary={labelResult!.data[sampleId]}
-                    ></Highlighter>
+                    <Highlighter summary={labelResult!.data[sampleId]}></Highlighter>
                     <ExperienceForm></ExperienceForm>
                 </div>
             )}

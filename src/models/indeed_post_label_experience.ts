@@ -29,16 +29,16 @@ export function initTable(conn: sqlite.Database) {
 // What's in the DB
 class _RawDb {
     // This is a class instead of interface so that we can extract the keys into Columns at runtime
-    id!: number
-    idSample!: string
-    createdAt!: string
-    updatedAt!: string
+    id: number = 0
+    idSample: string = ""
+    createdAt: string = ""
+    updatedAt: string = ""
 
-    category!: string
-    citations!: string
-    conditions!: string
-    min!: number | null
-    max!: number | null
+    category: string = ""
+    citations: string = ""
+    conditions: string = ""
+    min: number | null = null
+    max: number | null = null
 }
 export interface RawDb extends _RawDb {}
 export type Column = keyof RawDb
@@ -109,26 +109,37 @@ export function get(conn: sqlite.Database, id: number): Model {
 }
 
 export type Summary = {
-    sample: Partial<IndeedPost.Model>
-    label: Partial<Model>
+    sample: Partial<IndeedPost.Model> | Record<keyof IndeedPost.Model, null>
+    label: Partial<Model> | Record<keyof Model, null>
     count: number
 }
 export function getAllSummarized(
     conn: sqlite.Database,
-    sampleColumns: IndeedPost.Column[],
-    labelColumns: Column[],
-    orderBy: "count" = "count",
-    sortBy: "asc" | "desc" = "asc"
+    sampleColumns: string[] | undefined,
+    labelColumns: string[] | undefined,
+    orderBy: string = "count",
+    sortBy: string = "asc"
 ): Summary[] {
     // Validate
-    checkWhitelist(sampleColumns, IndeedPost.Columns, "Invalid sample columns:")
-    checkWhitelist(labelColumns, Columns, "Invalid label columns:")
+    const checkedSampleColumns = checkWhitelist(
+        sampleColumns || [],
+        IndeedPost.Columns,
+        "Invalid sample columns:"
+    )
+    const checkedLabelColumns = checkWhitelist(
+        labelColumns || [],
+        Columns,
+        "Invalid label columns:"
+    )
     checkWhitelist([orderBy], ["count"], "Invalid orderBy type:")
     checkWhitelist([sortBy], ["asc", "desc"], "Invalid sort type:")
 
-    // Required columns
-    const queryColumnsSamples = mergeDistinct(sampleColumns, ["id"] as IndeedPost.Column[])
-    const queryColumnsLabels = mergeDistinct(labelColumns, ["idSample", "createdAt"] as Column[])
+    // Append required columns
+    const queryColumnsSamples = mergeDistinct(checkedSampleColumns, ["id"] as IndeedPost.Column[])
+    const queryColumnsLabels = mergeDistinct(checkedLabelColumns, [
+        "idSample",
+        "createdAt",
+    ] as Column[])
     const sampleColumnQuery = queryColumnsSamples
         .map((name) => `s.${name} as __sample__${name}`)
         .join(",")
@@ -143,17 +154,15 @@ export function getAllSummarized(
     const rows = conn
         .prepare(
             // The MAX(createdAt) ensures we get the non-aggregated cols from the most recent label
-            `
-            SELECT *, COUNT(__label__idSample) as count, MAX(__label__createdAt) FROM (
+            `SELECT *, COUNT(__label__idSample) as count, MAX(__label__createdAt) FROM (
                 SELECT 
                     ${labelColumnQuery},
                     ${sampleColumnQuery}
                 FROM ${IndeedPost.TABLE_ID} s
                 LEFT JOIN ${TABLE_ID} l ON s.id = l.idSample
               )
-            GROUP BY __sample__id;
-            ${orderByQuery}
-            `
+            GROUP BY __sample__id
+            ${orderByQuery}`
         )
         .all() as Array<{ count: number } & any>
 
@@ -167,15 +176,15 @@ export function getAllSummarized(
             sample: sample,
             label: {
                 ...label,
-                conditions: JSON.parse(label.conditions as string),
-                citations: JSON.parse(label.citations as string),
+                conditions: JSON.parse(label.conditions ?? "[]"),
+                citations: JSON.parse(label.citations ?? "[]"),
             },
             count: r.count,
         }
 
         // Filter out unrequested columns
-        obj.sample = filterProperties(obj.sample, sampleColumns)
-        obj.label = filterProperties(obj.label, labelColumns)
+        obj.sample = filterProperties(obj.sample, checkedSampleColumns)
+        obj.label = filterProperties(obj.label, checkedLabelColumns)
 
         return obj
     })
