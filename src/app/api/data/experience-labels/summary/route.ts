@@ -1,7 +1,6 @@
 import * as ExperienceLabel from "@/models/indeed_post_label_experience"
 import { ValidationError } from "@/utils"
 import { getDb } from "@/utils-server"
-import { NextApiRequest } from "next"
 import { NextResponse } from "next/server"
 
 export async function GET(req: Request) {

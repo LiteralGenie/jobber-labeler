@@ -99,12 +99,14 @@ export function insert(data: PayloadCreate, conn: sqlite.Database): Model {
     return model
 }
 
-export function get(conn: sqlite.Database, id: number): Model {
-    const row = conn.prepare(`SELECT * FROM ${TABLE_ID} WHERE id = ?`).get(id) as RawDb
+export function get(conn: sqlite.Database, id: number): Model | undefined {
+    const row = conn.prepare(`SELECT * FROM ${TABLE_ID} WHERE id = ?`).get(id) as RawDb | undefined
+    if (!row) return row
+
     return {
         ...row,
-        citations: JSON.parse(row.citations),
-        conditions: JSON.parse(row.conditions),
+        citations: row.citations ? JSON.parse(row.citations) : null,
+        conditions: row.citations ? JSON.parse(row.conditions) : null,
     }
 }
 

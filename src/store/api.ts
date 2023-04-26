@@ -13,14 +13,13 @@ export const api = createApi({
         }),
 
         // prettier-ignore
-        expLabelSummary: builder.query<Record<string,ExperienceLabel.Summary>, void>({
-            query: () => "data/experience_labels/summary",
-            transformResponse: ({ data }: { data: Record<string,ExperienceLabel.Summary> }) => data
+        expLabelSummary: builder.query<Record<string, ExperienceLabel.Summary>, void>({
+            query: () => "data/experience-labels/summary",
+            transformResponse: ({ data }: { data: Record<string, ExperienceLabel.Summary> }) => data
         }),
         expLabel: builder.query<ExperienceLabel.Model, number>({
-            query: (id) => `data/experience_labels/${id}`,
-            transformResponse: ({ data }: ApiData<ExperienceLabel.Model>) =>
-                data,
+            query: (id) => `data/experience-labels/${id}`,
+            transformResponse: ({ data }: ApiData<ExperienceLabel.Model>) => data,
         }),
     }),
 })
