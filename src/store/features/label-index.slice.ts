@@ -1,3 +1,4 @@
+import { ExperienceLabel, IndeedPost } from "@/models"
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 
 export type State = {
@@ -34,3 +35,19 @@ export const slice = createSlice({
 })
 
 export const reducerPath = "labelIndex"
+
+// Arguments for the ExperienceLabel.getAllSummarized() endpoint
+export const selectSummaryApiArgs = ({ labelIndex: state }: { [reducerPath]: State }) => {
+    const args = {
+        sampleColumns: ["id"] as IndeedPost.Column[],
+        labelColumns: ["id"] as ExperienceLabel.Column[],
+        sortBy: state.sortBy,
+        orderBy: state.orderBy,
+    }
+    switch (state.category) {
+        case "experience":
+            args.labelColumns.push("min", "max")
+            break
+    }
+    return args
+}
