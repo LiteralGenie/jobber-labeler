@@ -1,7 +1,7 @@
 import Database from "better-sqlite3"
 import * as sqlite from "better-sqlite3"
 import paths from "@/config/paths"
-import * as ExperienceLabel from "@/models/indeed_post_label_experience"
+import { ExperienceLabel } from "@/models"
 
 export function getDb(): sqlite.Database {
     const conn = new Database(paths.DB_FILE)

@@ -1,4 +1,4 @@
-import * as IndeedPost from "@/models/indeed_post"
+import { IndeedPost } from "@/models"
 import { getDb } from "@/utils-server"
 import { NextResponse } from "next/server"
 

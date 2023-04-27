@@ -1,4 +1,4 @@
-import * as ExperienceLabel from "@/models/indeed_post_label_experience"
+import { ExperienceLabel } from "@/models"
 import { ValidationError } from "@/utils"
 import { getDb } from "@/utils-server"
 import { NextResponse } from "next/server"

@@ -3,8 +3,8 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
 import { SidebarReducer } from "./features/sidebar.slice"
 import { api } from "./api"
 import * as LabelPage from "@/store/features/label-index.slice"
-import * as ExperienceLabel from "@/models/indeed_post_label_experience"
-import * as IndeedPost from "@/models/indeed_post"
+import { ExperienceLabel } from "@/models"
+import { IndeedPost } from "@/models"
 
 export const STORE = configureStore({
     reducer: {
@@ -22,7 +22,7 @@ export type RootState = ReturnType<typeof STORE.getState>
 export const useAppDispatch: () => typeof STORE.dispatch = useDispatch
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector
 
-// Multi-slice selectors
+// Get the thing we're labeling from the sorted options
 export const selectActiveLabel = (state: RootState) => {
     // Decide which fields to include in list
     const list = state.labelIndex

@@ -1,4 +1,4 @@
-import * as ExperienceLabel from "@/models/indeed_post_label_experience"
+import { ExperienceLabel } from "@/models"
 
 export type HighlighterProps = {
     summary: ExperienceLabel.Summary

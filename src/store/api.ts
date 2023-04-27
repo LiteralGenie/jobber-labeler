@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
-import * as ExperienceLabel from "@/models/indeed_post_label_experience"
-import * as IndeedPost from "@/models/indeed_post"
+import { ExperienceLabel } from "@/models"
+import { IndeedPost } from "@/models"
 import { ApiData } from "@/utils"
 
 type SummaryEndpointArgs = Omit<ExperienceLabel.SummaryOpts, "conn">

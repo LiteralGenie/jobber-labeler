@@ -150,8 +150,8 @@ export function getAllSummarized({
         Columns,
         "Invalid label columns:"
     )
-    checkWhitelist([orderBy], ["count"], "Invalid orderBy type:")
-    checkWhitelist([sortBy], ["asc", "desc"], "Invalid sort type:")
+    checkWhitelist([sortBy], ["count"], "Invalid sort type:")
+    checkWhitelist([orderBy], ["asc", "desc"], "Invalid order:")
 
     // Append required columns
     const queryColumnsSamples = mergeDistinct(checkedSampleColumns, ["id"] as IndeedPost.Column[])
