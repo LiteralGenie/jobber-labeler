@@ -138,7 +138,7 @@ export function getAllSummarized({
     labelColumns,
     sortBy = "count",
     orderBy = "asc",
-}: SummaryOpts): Summary[] {
+}: RawSummaryOpts): Summary[] {
     // Validate
     const checkedSampleColumns = checkWhitelist(
         sampleColumns || [],

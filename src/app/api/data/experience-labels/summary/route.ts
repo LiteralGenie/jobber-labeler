@@ -9,18 +9,13 @@ export async function GET(req: Request) {
     try {
         const rawParams = Object.fromEntries(new URL(req.url).searchParams)
         const params = {
+            conn: conn,
             sampleColumns: rawParams["sample-columns"]?.split(","),
             labelColumns: rawParams["label-columns"]?.split(","),
             sortBy: rawParams["sort-by"],
             orderBy: rawParams["order-by"],
         }
-        const data = ExperienceLabel.getAllSummarized(
-            conn,
-            params.sampleColumns,
-            params.labelColumns,
-            params.sortBy,
-            params.orderBy
-        )
+        const data = ExperienceLabel.getAllSummarized({ ...params })
         return NextResponse.json({ data })
     } catch (e) {
         if (e instanceof ValidationError) {
