@@ -105,8 +105,8 @@ export function get(conn: sqlite.Database, id: number): Model | undefined {
 
     return {
         ...row,
-        citations: row.citations ? JSON.parse(row.citations) : null,
-        conditions: row.citations ? JSON.parse(row.conditions) : null,
+        citations: JSON.parse(row.citations ?? "[]"),
+        conditions: JSON.parse(row.conditions ?? "[]"),
     }
 }
 
@@ -128,7 +128,8 @@ export interface SummaryOpts extends RawSummaryOpts {
 }
 // Return type
 export type Summary = {
-    sample: Partial<IndeedPost.Model> | Record<keyof IndeedPost.Model, null>
+    sample: Partial<IndeedPost.Model>
+    // nulls come from the JOIN
     label: Partial<Model> | Record<keyof Model, null>
     count: number
 }
