@@ -32,44 +32,44 @@ const styles = css({
 })
 
 type ActiveItem =
-    | { sample: undefined; label: undefined; isLoading: true }
-    | { sample: Partial<IndeedPost.Model>; label: null; isLoading: false }
-    | { sample: Partial<IndeedPost.Model>; label: Partial<ExperienceLabel.Model>; isLoading: false }
+    | { status: "loading" }
+    | { status: "error" }
+    | { sample: Partial<IndeedPost.Model>; label: null; status: "loaded" }
+    | { sample: Partial<IndeedPost.Model>; label: Partial<ExperienceLabel.Model>; status: "loaded" }
 const useActiveItem = (): ActiveItem => {
     const args = useSelector(selectSummaryApiArgs)
 
     const summariesQuery = api.useExpLabelSummaryQuery(args)
+    if (summariesQuery.isError) return { status: "error" }
     const summaryIdx = useSelector((state: RootState) => state.labelIndex.index)
     const summary = summariesQuery.data?.[summaryIdx]
 
     const sampleId = summary?.sample.id
     const sampleQuery = api.useSampleQuery(sampleId as string, { skip: !sampleId })
+    if (sampleQuery.isError) return { status: "error" }
 
     const labelId = summary?.label.id
     const labelQuery = api.useExpLabelQuery(labelId as number, { skip: !labelId })
+    if (labelQuery.isError) return { status: "error" }
 
-    if (!summariesQuery.isLoading && !sampleQuery.isLoading) {
+    if (summariesQuery.isSuccess && sampleQuery.isSuccess) {
         if (!labelId) {
             // No label yet for this sample
             return {
-                sample: sampleQuery.data as Partial<IndeedPost.Model>,
+                sample: sampleQuery.data,
                 label: null,
-                isLoading: false,
+                status: "loaded",
             }
-        } else if (labelId && !labelQuery.isLoading) {
+        } else if (labelQuery.isSuccess) {
             // Sample and label exist
             return {
-                sample: sampleQuery.data as Partial<IndeedPost.Model>,
-                label: labelQuery.data as Partial<ExperienceLabel.Model>,
-                isLoading: false,
+                sample: sampleQuery.data,
+                label: labelQuery.data,
+                status: "loaded",
             }
         }
     }
 
     // Still loading
-    return {
-        sample: undefined,
-        label: undefined,
-        isLoading: true,
-    }
+    return { status: "loading" }
 }
