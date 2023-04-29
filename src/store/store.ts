@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit"
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
 import { SidebarReducer } from "./features/sidebar.slice"
 import { api } from "./api"
-import * as LabelPage from "@/store/features/label-index.slice"
+import * as LabelPage from "@/store/features/labels.slice"
 
 export const STORE = configureStore({
     reducer: {

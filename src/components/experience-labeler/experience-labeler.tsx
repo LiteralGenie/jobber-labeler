@@ -3,28 +3,35 @@
 import * as api from "@/store/api"
 import { css } from "@emotion/react"
 import { useSelector } from "react-redux"
-import { selectSummaryApiArgs } from "@/store/features/label-index.slice"
+import { selectSummaryApiArgs } from "@/store/features/labels.slice"
 import { RootState } from "@/store/store"
 import { ExperienceLabel, IndeedPost } from "@/models"
+import { ReactNode } from "react"
+import Highlighter from "./highlighter"
+import ExperienceForm from "./experience-form"
 
 export default function ExperienceLabeler() {
-    const { sample, label, isLoading } = useActiveItem()
+    const { sample, label, status } = useActiveItem()
 
-    return (
-        <div css={styles}>
-            {/* {sampleId && (
-                <div>
-                    <Highlighter summary={labelResult!.data[sampleId]}></Highlighter>
-                    <ExperienceForm></ExperienceForm>
-                </div>
-            )} */}
+    let content: ReactNode
+    if (status === "loaded") {
+        content = (
             <div>
-                <pre>{isLoading}</pre>
+                <Highlighter sample={sample} label={label}></Highlighter>
+                <ExperienceForm sample={sample} label={label}></ExperienceForm>
+            </div>
+        )
+    } else {
+        content = (
+            <div>
+                <pre>{status}</pre>
                 <pre>{JSON.stringify(sample, undefined, 2)}</pre>
                 <pre>{JSON.stringify(label, undefined, 2)}</pre>
             </div>
-        </div>
-    )
+        )
+    }
+
+    return <div css={styles}>{content}</div>
 }
 
 const styles = css({
@@ -32,8 +39,8 @@ const styles = css({
 })
 
 type ActiveItem =
-    | { status: "loading" }
-    | { status: "error" }
+    | { sample?: undefined; label?: undefined; status: "loading" }
+    | { sample?: undefined; label?: undefined; status: "error" }
     | { sample: Partial<IndeedPost.Model>; label: null; status: "loaded" }
     | { sample: Partial<IndeedPost.Model>; label: Partial<ExperienceLabel.Model>; status: "loaded" }
 const useActiveItem = (): ActiveItem => {
@@ -41,7 +48,7 @@ const useActiveItem = (): ActiveItem => {
 
     const summariesQuery = api.useExpLabelSummaryQuery(args)
     if (summariesQuery.isError) return { status: "error" }
-    const summaryIdx = useSelector((state: RootState) => state.labelIndex.index)
+    const summaryIdx = useSelector((state: RootState) => state.labels.index)
     const summary = summariesQuery.data?.[summaryIdx]
 
     const sampleId = summary?.sample.id
@@ -52,16 +59,17 @@ const useActiveItem = (): ActiveItem => {
     const labelQuery = api.useExpLabelQuery(labelId as number, { skip: !labelId })
     if (labelQuery.isError) return { status: "error" }
 
+    // When API calls are done...
     if (summariesQuery.isSuccess && sampleQuery.isSuccess) {
         if (!labelId) {
-            // No label yet for this sample
+            // No label for this sample
             return {
                 sample: sampleQuery.data,
                 label: null,
                 status: "loaded",
             }
         } else if (labelQuery.isSuccess) {
-            // Sample and label exist
+            // Sample was labeled before
             return {
                 sample: sampleQuery.data,
                 label: labelQuery.data,

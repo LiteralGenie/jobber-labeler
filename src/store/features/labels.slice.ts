@@ -34,10 +34,10 @@ export const slice = createSlice({
     },
 })
 
-export const reducerPath = "labelIndex"
+export const reducerPath = "labels"
 
 // Arguments for the ExperienceLabel.getAllSummarized() endpoint
-export const selectSummaryApiArgs = ({ labelIndex: state }: { [reducerPath]: State }) => {
+export const selectSummaryApiArgs = ({ labels: state }: { [reducerPath]: State }) => {
     const args = {
         sampleColumns: ["id"] as IndeedPost.Column[],
         labelColumns: ["id"] as ExperienceLabel.Column[],

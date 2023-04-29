@@ -1,15 +1,10 @@
-import { ExperienceLabel } from "@/models"
+import { ExperienceLabel, IndeedPost } from "@/models"
 
 export type HighlighterProps = {
-    summary: ExperienceLabel.Summary
+    sample: Partial<IndeedPost.Model>
+    label: Partial<ExperienceLabel.Model> | null
 }
 
-export default function Highlighter({ summary }: HighlighterProps) {
-    return (
-        <div>
-            {" "}
-            highlighter
-            {JSON.stringify(summary, undefined, 2)}
-        </div>
-    )
+export default function Highlighter({ sample, label }: HighlighterProps) {
+    return <div></div>
 }
