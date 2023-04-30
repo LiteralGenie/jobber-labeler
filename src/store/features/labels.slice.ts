@@ -4,14 +4,14 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 export type State = {
     category: "experience"
     index: number
-    sortBy: "count"
+    sortBy: "createdAt"
     orderBy: "asc" | "desc"
 }
 
 export const defaultState: State = {
     category: "experience",
     index: 0,
-    sortBy: "count",
+    sortBy: "createdAt",
     orderBy: "desc",
 }
 

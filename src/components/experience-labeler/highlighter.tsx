@@ -2,9 +2,9 @@ import { ExperienceLabel, IndeedPost } from "@/models"
 
 export type HighlighterProps = {
     sample: Partial<IndeedPost.Model>
-    label: Partial<ExperienceLabel.Model> | null
+    labels: Array<Partial<ExperienceLabel.Model>>
 }
 
-export default function Highlighter({ sample, label }: HighlighterProps) {
+export default function Highlighter({ sample, labels }: HighlighterProps) {
     return <div></div>
 }

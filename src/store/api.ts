@@ -31,11 +31,16 @@ export const api = createApi({
             },
             transformResponse: ({ data }: { data: ExperienceLabel.Summary[] }) => data,
         }),
-        expLabel: builder.query<ExperienceLabel.Model, number>({
-            query: (id) => `data/experience-labels/${id}`,
-            transformResponse: ({ data }: ApiData<ExperienceLabel.Model>) => data,
+        expLabels: builder.query<ExperienceLabel.Model[], number[]>({
+            queryFn: async (ids) => {
+                const requests = ids.map(async id => {
+                    return await (await fetch(`data/experience-labels/${id}`)).json()
+                })
+                const results = await Promise.all(requests)
+                return {data: results}
+            },
         }),
     }),
 })
 
-export const { useSampleQuery, useExpLabelSummaryQuery, useExpLabelQuery } = api
+export const { useSampleQuery, useExpLabelSummaryQuery, useExpLabelsQuery } = api

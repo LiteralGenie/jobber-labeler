@@ -9,24 +9,30 @@ import { ExperienceLabel, IndeedPost } from "@/models"
 import { ReactNode } from "react"
 import Highlighter from "./highlighter"
 import ExperienceForm from "./experience-form"
+import { useForm } from "react-hook-form"
+
+export type ExperienceLabelForm = {
+    labels: Array<{
+        category: string
+        citations: Array<{ start: number; end: number }>
+        conditions: string[]
+        min: number
+        max: number | null
+    }>
+}
 
 export default function ExperienceLabeler() {
-    const { sample, label, status } = useActiveItem()
+    const { sample, labels, status } = useActiveItem()
 
     let content: ReactNode
     if (status === "loaded") {
-        content = (
-            <div>
-                <Highlighter sample={sample} label={label}></Highlighter>
-                <ExperienceForm sample={sample} label={label}></ExperienceForm>
-            </div>
-        )
+        content = <FormWrapper {...{ sample, labels }} />
     } else {
         content = (
             <div>
                 <pre>{status}</pre>
                 <pre>{JSON.stringify(sample, undefined, 2)}</pre>
-                <pre>{JSON.stringify(label, undefined, 2)}</pre>
+                <pre>{JSON.stringify(labels, undefined, 2)}</pre>
             </div>
         )
     }
@@ -34,15 +40,33 @@ export default function ExperienceLabeler() {
     return <div css={styles}>{content}</div>
 }
 
+// Init the form when API data is loaded
+function FormWrapper({
+    sample,
+    labels,
+}: {
+    sample: IndeedPost.Model
+    labels: Array<ExperienceLabel.Model>
+}) {
+    const form = useForm<ExperienceLabelForm>({ defaultValues: { labels } })
+
+    return (
+        <div>
+            <Highlighter sample={sample} labels={labels} />
+            <ExperienceForm {...{ sample, labels, form }} />
+        </div>
+    )
+}
+
 const styles = css({
     display: "flex",
 })
 
 type ActiveItem =
-    | { sample?: undefined; label?: undefined; status: "loading" }
-    | { sample?: undefined; label?: undefined; status: "error" }
-    | { sample: Partial<IndeedPost.Model>; label: null; status: "loaded" }
-    | { sample: Partial<IndeedPost.Model>; label: Partial<ExperienceLabel.Model>; status: "loaded" }
+    | { sample?: undefined; labels?: undefined; status: "loading" }
+    | { sample?: undefined; labels?: undefined; status: "error" }
+    | { sample: IndeedPost.Model; labels: []; status: "loaded" }
+    | { sample: IndeedPost.Model; labels: ExperienceLabel.Model[]; status: "loaded" }
 const useActiveItem = (): ActiveItem => {
     const args = useSelector(selectSummaryApiArgs)
 
@@ -55,24 +79,25 @@ const useActiveItem = (): ActiveItem => {
     const sampleQuery = api.useSampleQuery(sampleId as string, { skip: !sampleId })
     if (sampleQuery.isError) return { status: "error" }
 
-    const labelId = summary?.label.id
-    const labelQuery = api.useExpLabelQuery(labelId as number, { skip: !labelId })
+    const labelIds = summary?.labels.map((lbl) => lbl.id as number)
+    console.log("wtf", summary?.labels)
+    const labelQuery = api.useExpLabelsQuery(labelIds as number[], { skip: !labelIds })
     if (labelQuery.isError) return { status: "error" }
 
     // When API calls are done...
     if (summariesQuery.isSuccess && sampleQuery.isSuccess) {
-        if (!labelId) {
+        if (!labelIds) {
             // No label for this sample
             return {
                 sample: sampleQuery.data,
-                label: null,
+                labels: [],
                 status: "loaded",
             }
         } else if (labelQuery.isSuccess) {
             // Sample was labeled before
             return {
                 sample: sampleQuery.data,
-                label: labelQuery.data,
+                labels: labelQuery.data,
                 status: "loaded",
             }
         }

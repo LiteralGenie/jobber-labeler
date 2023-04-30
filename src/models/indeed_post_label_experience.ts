@@ -1,6 +1,6 @@
 import * as sqlite from "better-sqlite3"
 import * as IndeedPost from "./indeed_post"
-import { ValidationError, ValueOf, checkWhitelist, mergeDistinct } from "@/utils"
+import { checkWhitelist, mergeDistinct } from "@/utils"
 
 const TABLE_ID = "indeed_post_label_experience"
 
@@ -16,7 +16,7 @@ export function initTable(conn: sqlite.Database) {
             category        TEXT            NOT NULL,
             citations       TEXT            NOT NULL,   --json
             conditions      TEXT            NOT NULL,   --json
-            min             INTEGER,
+            min             INTEGER         NOT NULL,
             max             INTEGER,
 
             PRIMARY KEY (id),
@@ -37,7 +37,7 @@ class _RawDb {
     category: string = ""
     citations: string = ""
     conditions: string = ""
-    min: number | null = null
+    min: number = 0
     max: number | null = null
 }
 export interface RawDb extends _RawDb {}
@@ -52,9 +52,9 @@ export interface Model {
     updatedAt: string
 
     category: string
-    citations: Array<[number, number]>
+    citations: Array<{ start: number; end: number }>
     conditions: string[]
-    min: number | null
+    min: number
     max: number | null
 }
 
@@ -63,9 +63,9 @@ export interface PayloadCreate {
     idSample: string
 
     category: string
-    citations: Array<[number, number]>
+    citations: Array<{ start: number; end: number }>
     conditions?: string[]
-    min?: number
+    min: number
     max?: number
 }
 
@@ -73,7 +73,6 @@ export function insert(data: PayloadCreate, conn: sqlite.Database): Model {
     const now = new Date()
     const withDefaults = {
         conditions: [],
-        min: null,
         max: null,
         ...data,
         updatedAt: now.toISOString(),
@@ -123,21 +122,20 @@ export interface SummaryOpts extends RawSummaryOpts {
     conn: sqlite.Database
     sampleColumns?: IndeedPost.Column[]
     labelColumns?: Column[]
-    sortBy: "count"
+    sortBy: "createdAt"
     orderBy: "asc" | "desc"
 }
 // Return type
 export type Summary = {
     sample: Partial<IndeedPost.Model>
     // nulls come from the JOIN
-    label: Partial<Model> | Record<keyof Model, null>
-    count: number
+    labels: Array<Partial<Model>>
 }
 export function getAllSummarized({
     conn,
     sampleColumns,
     labelColumns,
-    sortBy = "count",
+    sortBy = "createdAt",
     orderBy = "asc",
 }: RawSummaryOpts): Summary[] {
     // Validate
@@ -151,7 +149,7 @@ export function getAllSummarized({
         Columns,
         "Invalid label columns:"
     )
-    checkWhitelist([sortBy], ["count"], "Invalid sort type:")
+    const checkedSortBy = checkWhitelist([sortBy], ["createdAt"] as const, "Invalid sort type:")[0]
     checkWhitelist([orderBy], ["asc", "desc"], "Invalid order:")
 
     // Append required columns
@@ -159,6 +157,7 @@ export function getAllSummarized({
     const queryColumnsLabels = mergeDistinct(checkedLabelColumns, [
         "idSample",
         "createdAt",
+        "category",
     ] as Column[])
     const sampleColumnQuery = queryColumnsSamples
         .map((name) => `s.${name} as __sample__${name}`)
@@ -168,47 +167,69 @@ export function getAllSummarized({
         .join(",")
 
     // Sort order
-    const orderByQuery = `ORDER BY ${sortBy} ${orderBy.toUpperCase()}`
+    const sortMap = { createdAt: "__label__createdAt" }
+    const orderByQuery = `ORDER BY ${sortMap[checkedSortBy]} ${orderBy.toUpperCase()}`
 
     // Run query
     const rows = conn
         .prepare(
-            // The MAX(createdAt) ensures we get the non-aggregated cols from the most recent label
-            `SELECT *, COUNT(__label__idSample) as count, MAX(__label__createdAt) FROM (
+            // The MAX(createdAt) ensures we get the most recent label for each category type
+            // (Labels are never updated, only inserted)
+            `SELECT *, MAX(__label__createdAt) FROM (
                 SELECT 
                     ${labelColumnQuery},
                     ${sampleColumnQuery}
                 FROM ${IndeedPost.TABLE_ID} s
                 LEFT JOIN ${TABLE_ID} l ON s.id = l.idSample
               )
-            GROUP BY __sample__id
+            GROUP BY __sample__id, __label__category
             ${orderByQuery}`
         )
         .all() as Array<{ count: number } & any>
 
-    const result: Summary[] = rows.map((r) => {
+    // Convert JSON columns from string to JSON
+    const parsed: Array<Summary & { labels: [Partial<Model>] }> = rows.map((r) => {
         // Rename columns that were prefixed with table name
         const sample = extractRawFromQueryResult<IndeedPost.RawDb>(r, "__sample__")
         const label = extractRawFromQueryResult<RawDb>(r, "__label__")
 
         // Build result
-        const obj: Summary = {
+        const obj = {
             sample: sample,
-            label: {
-                ...label,
-                conditions: JSON.parse(label.conditions ?? "[]"),
-                citations: JSON.parse(label.citations ?? "[]"),
-            },
-            count: r.count,
+            labels: [
+                {
+                    ...label,
+                    conditions: JSON.parse(label.conditions ?? "[]"),
+                    citations: JSON.parse(label.citations ?? "[]"),
+                },
+            ] as [Partial<Model>],
         }
 
         // Filter out unrequested columns
         obj.sample = filterProperties(obj.sample, checkedSampleColumns)
-        obj.label = filterProperties(obj.label, checkedLabelColumns)
+        obj.labels[0] = filterProperties(obj.labels[0], checkedLabelColumns)
 
         return obj
     })
-    return result
+
+    // Group labels for the same sample
+    const grouped: Record<string, Summary[]> = {}
+    parsed.forEach((s) => {
+        grouped[s.sample.id as string] = []
+        grouped[s.sample.id as string].push(s)
+    })
+
+    // Flatten each group and remove nulls
+    // (which come from JOIN'ing samples without labels)
+    const normalized: Summary[] = Object.values(grouped).map((grp) => {
+        const labels = grp.map((summary) => summary.labels[0]).filter((lbl) => lbl.id !== null)
+        return {
+            ...grp[0],
+            labels: labels,
+        }
+    })
+
+    return normalized
 }
 
 function extractRawFromQueryResult<R>(row: any, tablePrefix: string): Partial<R> {
