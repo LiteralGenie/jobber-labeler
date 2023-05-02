@@ -35,6 +35,7 @@
     },
     "devDependencies": {
         "@redux-devtools/core": "^3.13.1",
-        "@types/better-sqlite3": "^7.6.4"
+        "@types/better-sqlite3": "^7.6.4",
+        "sass": "^1.62.1"
     }
 }

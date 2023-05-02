@@ -1,29 +1,40 @@
-/** @jsxImportSource @emotion/react */
-
+import styles from "./experience-form.module.scss"
 import * as api from "@/store/api"
-import { css } from "@emotion/react"
 import { useSelector } from "react-redux"
 import { selectSummaryApiArgs } from "@/store/features/labels.slice"
 import { RootState } from "@/store/store"
 import { ExperienceLabel, IndeedPost } from "@/models"
-import { ReactNode } from "react"
+import { ReactNode, useState } from "react"
 import Highlighter from "./highlighter"
 import ExperienceForm from "./experience-form"
 import { useForm } from "react-hook-form"
 
+export type Citation = { start: number; end: number }
+
 export type ExperienceLabelForm = {
     labels: Array<{
         category: string
-        citations: Array<{ start: number; end: number }>
+        citations: Citation[]
         conditions: string[]
         min: number
         max: number | null
     }>
 }
 
+export type SelectionState = {
+    // Text that's highlighted
+    selection: Citation | null
+    // Text outlined with dotted box (for minor emphasis)
+    secondarySelections: Citation[]
+    // Input that was focused when the user started highlighting
+    initialFocusEl: Element | null
+}
+
 export default function ExperienceLabeler() {
+    // Load API data
     const { sample, labels, status } = useActiveItem()
 
+    // Init the form when API data loaded
     let content: ReactNode
     if (status === "loaded") {
         content = <FormWrapper {...{ sample, labels }} />
@@ -36,11 +47,9 @@ export default function ExperienceLabeler() {
             </div>
         )
     }
-
-    return <div css={styles}>{content}</div>
+    return <div>{content}</div>
 }
 
-// Init the form when API data is loaded
 function FormWrapper({
     sample,
     labels,
@@ -48,19 +57,25 @@ function FormWrapper({
     sample: IndeedPost.Model
     labels: Array<ExperienceLabel.Model>
 }) {
-    const form = useForm<ExperienceLabelForm>({ defaultValues: { labels } })
+    const defaultLabels = [
+        { category: "general", min: 0, conditions: [], citations: [{ start: 0, end: 0 }] },
+    ]
+    const defaultValues = labels.length ? { labels } : { labels: defaultLabels }
+    const form = useForm<ExperienceLabelForm>({ defaultValues })
+
+    const [selectionState, setSelectionState] = useState<SelectionState>({
+        selection: null,
+        secondarySelections: [],
+        initialFocusEl: null,
+    })
 
     return (
-        <div>
-            <Highlighter sample={sample} labels={labels} />
-            <ExperienceForm {...{ sample, labels, form }} />
+        <div className={styles.container}>
+            <ExperienceForm {...{ form, selectionState, setSelectionState }} />
+            <Highlighter {...{ sample, selectionState, setSelectionState }} />
         </div>
     )
 }
-
-const styles = css({
-    display: "flex",
-})
 
 type ActiveItem =
     | { sample?: undefined; labels?: undefined; status: "loading" }
@@ -71,17 +86,17 @@ const useActiveItem = (): ActiveItem => {
     const args = useSelector(selectSummaryApiArgs)
 
     const summariesQuery = api.useExpLabelSummaryQuery(args)
-    if (summariesQuery.isError) return { status: "error" }
     const summaryIdx = useSelector((state: RootState) => state.labels.index)
     const summary = summariesQuery.data?.[summaryIdx]
 
     const sampleId = summary?.sample.id
     const sampleQuery = api.useSampleQuery(sampleId as string, { skip: !sampleId })
-    if (sampleQuery.isError) return { status: "error" }
 
     const labelIds = summary?.labels.map((lbl) => lbl.id as number)
-    console.log("wtf", summary?.labels)
     const labelQuery = api.useExpLabelsQuery(labelIds as number[], { skip: !labelIds })
+
+    if (summariesQuery.isError) return { status: "error" }
+    if (sampleQuery.isError) return { status: "error" }
     if (labelQuery.isError) return { status: "error" }
 
     // When API calls are done...
