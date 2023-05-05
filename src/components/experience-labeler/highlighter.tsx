@@ -1,10 +1,9 @@
 /** @jsxImportSource @emotion/react */
 
-import { ExperienceLabel, IndeedPost } from "@/models"
+import { IndeedPost } from "@/models"
 import { css } from "@emotion/react"
-import { ExperienceLabelForm, SelectionState } from "./experience-labeler"
-import { UseFormReturn } from "react-hook-form"
-import { fromEvent, map, withLatestFrom } from "rxjs"
+import { SelectionState } from "./experience-labeler"
+import { filter, fromEvent, map, merge, tap, withLatestFrom } from "rxjs"
 import { Dispatch, RefObject, SetStateAction, useEffect, useRef } from "react"
 
 export type HighlighterProps = {
@@ -20,6 +19,10 @@ export default function Highlighter({
 }: HighlighterProps) {
     const containerRef = useRef<HTMLDivElement>(null)
     useEffect(() => onSelection(containerRef, setSelectionState), [containerRef, setSelectionState])
+    useEffect(
+        () => onSelectionEnd(selectionState, setSelectionState),
+        [selectionState, setSelectionState]
+    )
     useEffect(() => onSelectionChange(containerRef, selectionState), [containerRef, selectionState])
 
     return (
@@ -43,7 +46,7 @@ function onSelection(
     const select$ = fromEvent<Event>(document, "selectionchange")
     const mousedown$ = fromEvent<Event>(document, "mousedown")
 
-    const obs$ = select$.pipe(
+    const handleSelect$ = select$.pipe(
         withLatestFrom(mousedown$.pipe(map(() => document.activeElement))),
         map(([_, activeEl]) => [activeEl, document.getSelection() as Selection] as const),
         map(([activeEl, sel]) => {
@@ -67,8 +70,8 @@ function onSelection(
             const isTargetNode = (node: Node) =>
                 node === tgt || Array.from(tgt.childNodes).some((tgtChild) => node === tgtChild)
             if (isTargetNode(anchorNode) && isTargetNode(focusNode)) {
-                update.selection.start = sel.anchorOffset
-                update.selection.end = sel.focusOffset
+                const [start, end] = [sel.anchorOffset, sel.focusOffset]
+                update.selection = { start, end }
             } else if (isTargetNode(anchorNode)) {
                 if (direction === "forward") {
                     update.selection.start = sel.anchorOffset
@@ -92,12 +95,39 @@ function onSelection(
         })
     )
 
-    const sub = obs$.subscribe()
+    const sub = merge(handleSelect$).subscribe()
     return () => sub.unsubscribe()
 }
 
-function onSelectionChange(target: RefObject<HTMLElement>, { selection }: SelectionState) {
+function onSelectionEnd(
+    selectionState: SelectionState,
+    setSelectionState: HighlighterProps["setSelectionState"]
+) {
+    const mousedown$ = fromEvent<MouseEvent>(document, "mousedown")
+    const mouseup$ = fromEvent<Event>(document, "mouseup")
+
+    const dragStart$ = mousedown$.pipe(
+        tap(() => setSelectionState((state) => ({ ...state, isSelecting: true })))
+    )
+    const dragEnd$ = mouseup$.pipe(
+        filter(() => selectionState.isSelecting),
+        tap(() => {
+            if (selectionState.initialFocusEl?.tagName === "INPUT" && selectionState.selection)
+                (selectionState.initialFocusEl as HTMLInputElement).focus()
+            setSelectionState((state) => ({ ...state, isSelecting: false }))
+        })
+    )
+
+    const sub = merge(dragStart$, dragEnd$).subscribe()
+    return () => sub.unsubscribe()
+}
+
+function onSelectionChange(
+    target: RefObject<HTMLElement>,
+    { selection, isSelecting }: SelectionState
+) {
     if (!selection) return
+    if (isSelecting) return
     const { start, end } = selection
 
     const tgt = target.current

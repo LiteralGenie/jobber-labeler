@@ -1,6 +1,44 @@
-.container {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    margin: 40px;
-    gap: 30px;
+.form {
+    display: flex;
+    flex-flow: column;
+    input: {
+        color: "black";
+    }
+}
+
+.label {
+    :global {
+        // Layout
+        display: grid;
+        grid-template-areas:
+            "category      category"
+            "conditions    conditions"
+            "min           max"
+            "citations     citations";
+        .category {
+            grid-area: category;
+        }
+        .conditions {
+            grid-area: conditions;
+        }
+        .min {
+            grid-area: min;
+        }
+        .max {
+            grid-area: max;
+        }
+        .citations {
+            grid-area: citations;
+        }
+
+        // Citations layout
+        .citations {
+            display: flex;
+            flex-flow: column;
+            .citations__inputs {
+                display: flex;
+                flex-flow: row;
+            }
+        }
+    }
 }

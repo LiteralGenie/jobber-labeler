@@ -1,4 +1,4 @@
-import styles from "./experience-form.module.scss"
+import styles from "./experience-labeler.module.scss"
 import * as api from "@/store/api"
 import { useSelector } from "react-redux"
 import { selectSummaryApiArgs } from "@/store/features/labels.slice"
@@ -28,6 +28,7 @@ export type SelectionState = {
     secondarySelections: Citation[]
     // Input that was focused when the user started highlighting
     initialFocusEl: Element | null
+    isSelecting: boolean
 }
 
 export default function ExperienceLabeler() {
@@ -67,6 +68,7 @@ function FormWrapper({
         selection: null,
         secondarySelections: [],
         initialFocusEl: null,
+        isSelecting: false,
     })
 
     return (

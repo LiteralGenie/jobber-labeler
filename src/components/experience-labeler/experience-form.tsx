@@ -1,9 +1,9 @@
-/** @jsxImportSource @emotion/react */
-
-import { css } from "@emotion/react"
-import { UseFormReturn, useFieldArray } from "react-hook-form"
+import styles from "./experience-form.module.scss"
+import { Controller, UseFormReturn, useFieldArray } from "react-hook-form"
 import { Citation, ExperienceLabelForm, SelectionState } from "./experience-labeler"
-import { Dispatch, SetStateAction, useEffect } from "react"
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
+import { FormControl, Input, InputLabel, MenuItem, Select, TextField } from "@mui/material"
+import AutocompleteChips from "./autocomplete-chips"
 
 export type ExperienceFormProps = {
     form: UseFormReturn<ExperienceLabelForm>
@@ -38,7 +38,7 @@ export default function ExperienceForm({
     }
 
     return (
-        <form css={styles}>
+        <form className={styles.form}>
             {labelFields.fields.map((item, idx) => (
                 <Label
                     key={item.id}
@@ -69,13 +69,14 @@ function Label({
     selectionState: SelectionState
     setSelectionState: ExperienceFormProps["setSelectionState"]
 }) {
-    const { setValue } = form
-    const register = form.register as any
+    const { setValue, control } = form
 
     const citationArray = useFieldArray({
         control: form.control,
         name: `${formPath}.citations` as any,
     })
+    const containerEls = useRef<Array<HTMLDivElement | null>>([])
+
     const onMouseEnter = (item: Citation) =>
         setSelectionState((state) => {
             const { start, end } = item
@@ -85,7 +86,7 @@ function Label({
         setSelectionState((state) => {
             return { ...state, secondarySelections: [] }
         })
-    const onFocus = (event: FocusEvent, path: string) => {
+    const setCitation = (event: FocusEvent, path: string) => {
         event.preventDefault()
 
         const props = path.split(".")
@@ -97,73 +98,125 @@ function Label({
 
     useEffect(() => {
         citationArray.fields.forEach((_, idx) => {
-            const path = formPath.split(".").concat(["citations", idx.toString()])
-            const citation = path.reduce((val, key) => val[key], form.control._fields as any)
-            const startEl = citation.start._f.ref
-            const endEl = citation.end._f.ref
-
-            onSelectionChange(
-                selectionState,
-                startEl,
-                endEl,
-                setValue,
-                `${formPath}.citations.${idx}`
-            )
+            const containerEl = containerEls.current[idx]
+            onSelectionChange(selectionState, containerEl, setValue, `${formPath}.citations.${idx}`)
         })
     }, [selectionState, citationArray, setValue, formPath])
 
     return (
-        <div>
-            <label htmlFor="category">Category</label>
-            <input {...register(`${formPath}.category`)} type="text" />
+        <div className={styles.label}>
+            <Controller
+                name={`${formPath}.category` as any}
+                control={control}
+                render={({ field }) => (
+                    <FormControl fullWidth className="category">
+                        <InputLabel>Category</InputLabel>
+                        <Select label="Category" {...field}>
+                            <MenuItem value={"general"}>General</MenuItem>
+                        </Select>
+                    </FormControl>
+                )}
+            />
 
-            <label htmlFor="min">Min</label>
-            <input {...register(`${formPath}.min`)} type="number" />
+            <Controller
+                name={`${formPath}.conditions` as any}
+                control={control}
+                render={({ field }) => (
+                    <AutocompleteChips
+                        label="Conditions"
+                        options={["none"]}
+                        {...field}
+                        className="conditions"
+                    />
+                )}
+            />
 
-            <label htmlFor="max">Max</label>
-            <input {...register(`${formPath}.max`)} type="number" />
+            <Controller
+                name={`${formPath}.min` as any}
+                control={control}
+                render={({ field }) => (
+                    <TextField
+                        label="Min"
+                        type="number"
+                        InputProps={{ inputProps: { min: 0 } }}
+                        {...field}
+                        className="min"
+                    />
+                )}
+            />
 
-            <label htmlFor="conditions">Conditions</label>
-            <input {...register(`${formPath}.conditions`)} type="text" />
+            <Controller
+                name={`${formPath}.max` as any}
+                control={control}
+                render={({ field }) => (
+                    <TextField
+                        label="Max"
+                        type="number"
+                        InputProps={{ inputProps: { min: 0 } }}
+                        {...field}
+                        className="max"
+                    />
+                )}
+            />
 
-            <div>Citations</div>
-            {citationArray.fields.map((item, idx) => (
-                <div
-                    key={item.id}
-                    onMouseEnter={() => onMouseEnter(item as any)}
-                    onMouseLeave={onMouseLeave}
-                    onFocus={(event) => onFocus(event as any, `${formPath}.citations.${idx}`)}
-                    onClick={(event) => onFocus(event as any, `${formPath}.citations.${idx}`)}
-                >
-                    <input {...register(`${formPath}.citations.${idx}.start`)} type="number" />
-                    <input {...register(`${formPath}.citations.${idx}.end`)} type="number" />
-                </div>
-            ))}
+            <div className="citations">
+                <div>Citations</div>
+                {citationArray.fields.map((item, idx) => (
+                    <div
+                        key={item.id}
+                        onMouseEnter={() => onMouseEnter(item as any)}
+                        onMouseLeave={onMouseLeave}
+                        onFocus={(event: any) => setCitation(event, `${formPath}.citations.${idx}`)}
+                        onClick={(event: any) => setCitation(event, `${formPath}.citations.${idx}`)}
+                        onChange={(event: any) =>
+                            setCitation(event, `${formPath}.citations.${idx}`)
+                        }
+                        ref={(el) => (containerEls.current[idx] = el)}
+                        className="citations__inputs"
+                    >
+                        <Controller
+                            name={`${formPath}.citations.${idx}.start` as any}
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    label="Start"
+                                    type="number"
+                                    InputProps={{ inputProps: { min: 0 } }}
+                                    {...field}
+                                />
+                            )}
+                        />
+                        <Controller
+                            name={`${formPath}.citations.${idx}.end` as any}
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    label="End"
+                                    type="number"
+                                    InputProps={{ inputProps: { min: 0 } }}
+                                    {...field}
+                                />
+                            )}
+                        />
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }
 
-const styles = css({
-    "&": {
-        display: "flex",
-        flexFlow: "column",
-        input: {
-            color: "black",
-        },
-    },
-})
-
 function onSelectionChange(
     state: SelectionState,
-    startEl: HTMLElement,
-    endEl: HTMLElement,
+    containerEl: HTMLElement | null,
     setValue: any,
     citationPath: string
 ): true | undefined {
-    if (!state.initialFocusEl) return
     if (!state.selection) return
-    if (state.initialFocusEl !== startEl && state.initialFocusEl !== endEl) return
+    if (!state.initialFocusEl) return
+    if (!containerEl?.contains(state.initialFocusEl)) return
 
-    setValue(citationPath, state.selection)
-    return true
+    let { start, end } = state.selection
+    if (start > end) [start, end] = [end, start]
+
+    setValue(citationPath, { start, end })
 }
