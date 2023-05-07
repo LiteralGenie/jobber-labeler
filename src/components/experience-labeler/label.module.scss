@@ -1,0 +1,37 @@
+.label {
+    :global {
+        // Layout
+        display: grid;
+        gap: 12px;
+        grid-template-areas:
+            "category      category"
+            "conditions    conditions"
+            "min           max"
+            "citations     citations";
+        .category {
+            grid-area: category;
+        }
+        .conditions {
+            grid-area: conditions;
+        }
+        .min {
+            grid-area: min;
+        }
+        .max {
+            grid-area: max;
+        }
+        .citations {
+            grid-area: citations;
+        }
+
+        // Citations layout
+        .citations {
+            display: flex;
+            flex-flow: column;
+            .citations__inputs {
+                display: flex;
+                flex-flow: row;
+            }
+        }
+    }
+}
