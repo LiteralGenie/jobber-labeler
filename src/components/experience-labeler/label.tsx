@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef } from "react"
 import { Controller, UseFormReturn, useFieldArray } from "react-hook-form"
 import { Citation, ExperienceLabelForm, SelectionState } from "./experience-labeler"
-import { FormControl, InputLabel, MenuItem, Select } from "@mui/material"
+import { MenuItem, Select } from "@mui/material"
 import AutocompleteChips from "./autocomplete-chips"
 import styles from "./label.module.scss"
 
@@ -49,7 +49,7 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
 
     return (
         <div className={styles.label}>
-            <div className="field-label">General</div>
+            <div className="field-label">Miscellaneous</div>
             <div className="general">
                 <Controller
                     name={`${formPath}.category` as any}

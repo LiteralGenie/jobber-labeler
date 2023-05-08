@@ -37,7 +37,7 @@
             color: hsla(0, 0%, 100%, 0.85);
             height: 30px;
             box-sizing: border-box;
-            padding: 4px 8px;
+            padding: 4px 14px;
             width: 0;
             min-width: 30px;
             flex-grow: 1;
@@ -72,10 +72,12 @@
         }
 
         .boxed-input-container.category {
+            background-color: #141414;
             display: grid;
             grid-template-columns: max-content 1fr;
 
             .MuiSelect-select {
+                color: hsla(0, 0%, 100%, 0.85);
                 padding-top: 5px;
                 padding-bottom: 5px;
             }
