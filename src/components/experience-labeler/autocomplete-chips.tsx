@@ -24,6 +24,7 @@ const Container = styled("div")(
         background-color: #141414;
         border: 1px solid #434343;
         border-radius: 4px;
+        overflow: hidden;
         
         &:hover, &:focus {
             border-color: #177ddc;
@@ -190,10 +191,13 @@ export default function AutocompleteChips({
                 <div
                     style={{
                         alignItems: "center",
+                        backgroundColor: "hsl(0, 0%, 12%)",
                         borderRight: "1px solid #303030",
                         display: "flex",
                         fontSize: "0.75rem",
                         padding: "0 0.5rem",
+                        justifyContent: "center",
+                        width: 100,
                     }}
                 >
                     <span>{label}</span>

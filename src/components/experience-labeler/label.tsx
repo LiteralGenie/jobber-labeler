@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef } from "react"
 import { Controller, UseFormReturn, useFieldArray } from "react-hook-form"
 import { Citation, ExperienceLabelForm, SelectionState } from "./experience-labeler"
-import { FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material"
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material"
 import AutocompleteChips from "./autocomplete-chips"
 import styles from "./label.module.scss"
 
@@ -49,62 +49,65 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
 
     return (
         <div className={styles.label}>
-            <Controller
-                name={`${formPath}.category` as any}
-                control={control}
-                render={({ field }) => (
-                    <FormControl fullWidth className="category">
-                        <InputLabel>Category</InputLabel>
-                        <Select label="Category" {...field}>
-                            <MenuItem value={"general"}>General</MenuItem>
-                        </Select>
-                    </FormControl>
-                )}
-            />
+            <div className="field-label">General</div>
+            <div className="general">
+                <Controller
+                    name={`${formPath}.category` as any}
+                    control={control}
+                    render={({ field }) => (
+                        <div className="boxed-input-container category">
+                            <div className="boxed-field-label">Category</div>
+                            <Select label="Category" {...field}>
+                                <MenuItem value={"general"}>General</MenuItem>
+                            </Select>
+                        </div>
+                    )}
+                />
 
-            <Controller
-                name={`${formPath}.conditions` as any}
-                control={control}
-                render={({ field }) => (
-                    <AutocompleteChips
-                        label="Conditions"
-                        options={["none"]}
-                        {...field}
-                        className="conditions"
-                    />
-                )}
-            />
+                <Controller
+                    name={`${formPath}.conditions` as any}
+                    control={control}
+                    render={({ field }) => (
+                        <AutocompleteChips
+                            label="Conditions"
+                            options={["none"]}
+                            {...field}
+                            className="conditions"
+                        />
+                    )}
+                />
 
-            <Controller
-                name={`${formPath}.min` as any}
-                control={control}
-                render={({ field }) => (
-                    <TextField
-                        label="Min"
-                        type="number"
-                        InputProps={{ inputProps: { min: 0 } }}
-                        {...field}
-                        className="min"
+                <div className="boxed-input-container">
+                    <div className="boxed-field-label">
+                        <span>YoE Range</span>
+                    </div>
+                    <Controller
+                        name={`${formPath}.min` as any}
+                        control={control}
+                        render={({ field }) => (
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="Minimum"
+                                {...field}
+                                style={{
+                                    borderRight: "1px solid #434343",
+                                }}
+                            ></input>
+                        )}
                     />
-                )}
-            />
-
-            <Controller
-                name={`${formPath}.max` as any}
-                control={control}
-                render={({ field }) => (
-                    <TextField
-                        label="Max"
-                        type="number"
-                        InputProps={{ inputProps: { min: 0 } }}
-                        {...field}
-                        className="max"
+                    <Controller
+                        name={`${formPath}.max` as any}
+                        control={control}
+                        render={({ field }) => (
+                            <input type="number" min="0" placeholder="Maximum" {...field}></input>
+                        )}
                     />
-                )}
-            />
+                </div>
+            </div>
 
             <div className="citations">
-                <div>Citations</div>
+                <div className="field-label">Citations</div>
                 {citationArray.fields.map((item, idx) => (
                     <div
                         key={item.id}
@@ -122,24 +125,24 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
                             name={`${formPath}.citations.${idx}.start` as any}
                             control={control}
                             render={({ field }) => (
-                                <TextField
-                                    label="Start"
-                                    type="number"
-                                    InputProps={{ inputProps: { min: 0 } }}
-                                    {...field}
-                                />
+                                <div className="boxed-input-container">
+                                    <div className="boxed-field-label">
+                                        <span>Start</span>
+                                    </div>
+                                    <input placeholder="Start" type="number" min="0" {...field} />
+                                </div>
                             )}
                         />
                         <Controller
                             name={`${formPath}.citations.${idx}.end` as any}
                             control={control}
                             render={({ field }) => (
-                                <TextField
-                                    label="End"
-                                    type="number"
-                                    InputProps={{ inputProps: { min: 0 } }}
-                                    {...field}
-                                />
+                                <div className="boxed-input-container">
+                                    <div className="boxed-field-label">
+                                        <span>Stop</span>
+                                    </div>
+                                    <input placeholder="Stop" type="number" min="0" {...field} />
+                                </div>
                             )}
                         />
                     </div>

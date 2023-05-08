@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction, useState } from "react"
 import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material"
 import { toTitleCase } from "@/utils"
 import * as Label from "./label"
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 
 export type ExperienceFormProps = {
     form: UseFormReturn<ExperienceLabelForm>
@@ -47,7 +48,7 @@ export default function ExperienceForm({
 
     const getLabelSummary = (idx: number) => {
         const d = getValues(`labels.${idx}`)
-        return `${toTitleCase(d.category)}: ${d.min} - ${d.max} YoE`
+        return `${toTitleCase(d.category)} - ${d.min || "?"} to ${d.max || "?"} YoE`
     }
 
     return (
@@ -56,9 +57,19 @@ export default function ExperienceForm({
                 <Accordion
                     onChange={(_, isExpanded) => onAccordionToggle(isExpanded, idx)}
                     expanded={openPanel === idx}
+                    key={idx}
                 >
-                    <AccordionSummary>{getLabelSummary(idx)}</AccordionSummary>
-                    <AccordionDetails>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <span style={{ fontSize: "16px", fontWeight: 500 }}>
+                            {getLabelSummary(idx)}
+                        </span>
+                    </AccordionSummary>
+                    <AccordionDetails
+                        style={{
+                            borderTop: "1px solid rgba(255, 255, 255, 0.12)",
+                            paddingTop: "12px",
+                        }}
+                    >
                         <Label.Component
                             key={item.id}
                             form={form}

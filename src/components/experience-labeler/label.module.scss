@@ -1,36 +1,95 @@
 .label {
     :global {
+        text-align: left;
+
         // Layout
-        display: grid;
-        gap: 12px;
-        grid-template-areas:
-            "category      category"
-            "conditions    conditions"
-            "min           max"
-            "citations     citations";
-        .category {
-            grid-area: category;
-        }
-        .conditions {
-            grid-area: conditions;
-        }
-        .min {
-            grid-area: min;
-        }
-        .max {
-            grid-area: max;
-        }
-        .citations {
-            grid-area: citations;
+        .general {
+            display: flex;
+            flex-flow: column;
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         // Citations layout
         .citations {
+            border-top: 1px solid hsl(0, 0%, 19%);
             display: flex;
             flex-flow: column;
+            margin-top: 8px;
+            padding-top: 12px;
+            text-align: left;
+
             .citations__inputs {
-                display: flex;
-                flex-flow: row;
+                display: grid;
+                gap: 8px;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .field-label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        input {
+            background-color: #141414;
+            color: hsla(0, 0%, 100%, 0.85);
+            height: 30px;
+            box-sizing: border-box;
+            padding: 4px 8px;
+            width: 0;
+            min-width: 30px;
+            flex-grow: 1;
+            border: 0;
+            margin: 0;
+            outline: 0;
+
+            &::placeholder {
+                color: hsla(0, 0%, 100%, 0.35);
+            }
+        }
+
+        .boxed-field-label {
+            align-items: center;
+            background-color: hsl(0, 0%, 12%);
+            border-right: 1px solid hsl(0, 0%, 19%);
+            color: hsla(0, 0%, 100%, 0.65);
+            display: flex;
+            font-size: 0.75rem;
+            justify-content: center;
+            padding: 0px 8px;
+            width: 100px;
+        }
+
+        .boxed-input-container {
+            align-items: stretch;
+            border: 1px solid #434343;
+            border-radius: 4px;
+            display: flex;
+            flex-flow: row;
+            overflow: hidden;
+        }
+
+        .boxed-input-container.category {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+
+            .MuiSelect-select {
+                padding-top: 5px;
+                padding-bottom: 5px;
+            }
+            .MuiInputBase-root {
+                border-radius: 0;
+            }
+            fieldset {
+                margin-top: 5px;
+            }
+            legend {
+                display: none;
+            }
+            :not(.Mui-focused) .MuiOutlinedInput-notchedOutline {
+                border-color: transparent;
             }
         }
     }
