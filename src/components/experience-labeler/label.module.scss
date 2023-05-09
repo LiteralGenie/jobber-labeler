@@ -11,10 +11,8 @@
         }
 
         // Citations layout
-        .citations {
+        .citations-container {
             border-top: 1px solid hsl(0, 0%, 19%);
-            display: flex;
-            flex-flow: column;
             margin-top: 8px;
             padding-top: 12px;
             text-align: left;
@@ -24,6 +22,11 @@
                 gap: 8px;
                 grid-template-columns: 1fr 1fr;
             }
+        }
+        .citations {
+            display: flex;
+            flex-flow: column;
+            gap: 12px;
         }
 
         .field-label {
@@ -69,6 +72,13 @@
             display: flex;
             flex-flow: row;
             overflow: hidden;
+
+            // Highlight on hover / focus
+            &:focus-within,
+            &:hover {
+                border-color: #177ddc;
+                box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            }
         }
 
         .boxed-input-container.category {
@@ -90,8 +100,25 @@
             legend {
                 display: none;
             }
-            :not(.Mui-focused) .MuiOutlinedInput-notchedOutline {
+            .MuiOutlinedInput-notchedOutline {
                 border-color: transparent;
+            }
+        }
+
+        .add-citation-container {
+            button {
+                border-style: dashed;
+                border-color: hsla(0, 0%, 100%, 0.5);
+                color: hsla(0, 0%, 100%, 0.5);
+                margin-top: 12px;
+                padding: 6px 0px;
+                width: 100%;
+
+                .icon {
+                    font-size: 1.25rem;
+                    line-height: 1;
+                    margin-right: 0.25rem;
+                }
             }
         }
     }

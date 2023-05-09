@@ -2,7 +2,7 @@ import styles from "./experience-form.module.scss"
 import { UseFormReturn, useFieldArray } from "react-hook-form"
 import { ExperienceLabelForm, SelectionState } from "./experience-labeler"
 import { Dispatch, SetStateAction, useState } from "react"
-import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material"
+import { Accordion, AccordionDetails, AccordionSummary, Button, Paper } from "@mui/material"
 import { toTitleCase } from "@/utils"
 import * as Label from "./label"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
@@ -48,37 +48,47 @@ export default function ExperienceForm({
 
     const getLabelSummary = (idx: number) => {
         const d = getValues(`labels.${idx}`)
-        return `${toTitleCase(d.category)} - ${d.min || "?"} to ${d.max || "?"} YoE`
+        const minStr = d.min === undefined ? "?" : d.min
+        const maxStr = d.max === undefined ? "?" : d.max
+        return `${toTitleCase(d.category)} - ${minStr} to ${maxStr} YoE`
     }
 
     return (
-        <form className={styles.form}>
-            {labelFields.fields.map((item, idx) => (
-                <Accordion
-                    onChange={(_, isExpanded) => onAccordionToggle(isExpanded, idx)}
-                    expanded={openPanel === idx}
-                    key={idx}
-                >
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <span className="summary-label">{getLabelSummary(idx)}</span>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                        <Label.Component
-                            key={item.id}
-                            form={form}
-                            formPath={`labels.${idx}`}
-                            selectionState={selectionState}
-                            setSelectionState={setSelectionState}
-                        />
-                    </AccordionDetails>
-                </Accordion>
-            ))}
-            <button type="button" onClick={onAddLabel}>
-                Add Label
-            </button>
-            <button type="button" onClick={onSubmit}>
-                Submit
-            </button>
+        <form className={styles.container}>
+            <div>
+                {labelFields.fields.map((item, idx) => (
+                    <Accordion
+                        onChange={(_, isExpanded) => onAccordionToggle(isExpanded, idx)}
+                        expanded={openPanel === idx}
+                        key={idx}
+                    >
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <span className="summary-label">{getLabelSummary(idx)}</span>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Label.Component
+                                key={item.id}
+                                form={form}
+                                formPath={`labels.${idx}`}
+                                selectionState={selectionState}
+                                setSelectionState={setSelectionState}
+                            />
+                        </AccordionDetails>
+                    </Accordion>
+                ))}
+            </div>
+
+            <div className="add-label-container">
+                <Button type="button" variant="outlined" onClick={onAddLabel}>
+                    <span className="icon">+</span>
+                    <span className="label">Add Label</span>
+                </Button>
+            </div>
+            <div className="submit-container">
+                <Button type="button" variant="contained" onClick={onSubmit}>
+                    Save
+                </Button>
+            </div>
         </form>
     )
 }

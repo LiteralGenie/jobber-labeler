@@ -8,6 +8,7 @@ import { ReactNode, useState } from "react"
 import Highlighter from "./highlighter"
 import ExperienceForm from "./experience-form"
 import { useForm } from "react-hook-form"
+import { Paper } from "@mui/material"
 
 export type Citation = { start: number; end: number }
 
@@ -74,7 +75,9 @@ function FormWrapper({
     return (
         <div className={styles["form-wrapper"]}>
             <ExperienceForm {...{ form, selectionState, setSelectionState }} />
-            <Highlighter {...{ sample, selectionState, setSelectionState }} />
+            <Paper elevation={1} style={{ padding: "24px 48px", height: "100%" }}>
+                <Highlighter {...{ sample, selectionState, setSelectionState }} />
+            </Paper>
         </div>
     )
 }

@@ -1,7 +1,9 @@
-.form {
+.container {
     :global {
-        display: flex;
-        flex-flow: column;
+        form {
+            display: flex;
+            flex-flow: column;
+        }
 
         // Details should have border
         .MuiAccordionDetails-root {
@@ -12,6 +14,44 @@
         // Summary label should have emphasis
         .summary-label {
             font-weight: 500;
+        }
+
+        // Restyle button
+        .add-label-container {
+            margin: 0px 8px;
+            margin-top: 16px;
+
+            button {
+                border-style: dashed;
+                border-color: hsla(0, 0%, 100%, 0.65);
+                color: hsla(0, 0%, 100%, 0.65);
+                padding: 6px 0px;
+                width: 100%;
+            }
+
+            .icon {
+                font-size: 1.25rem;
+                line-height: 1;
+                margin-right: 0.25rem;
+            }
+        }
+
+        // Restyle button
+        .submit-container {
+            margin: 0px 8px;
+            margin-top: 12px;
+
+            button {
+                background-color: #e91e63;
+                color: white;
+                padding: 6px 0px;
+                width: 100%;
+            }
+        }
+
+        // Remove margin at bottom of accordion (because button below it already has padding)
+        .MuiAccordion-root:last-of-type.Mui-expanded {
+            margin-bottom: 0;
         }
     }
 }

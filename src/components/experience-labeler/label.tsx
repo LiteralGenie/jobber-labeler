@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef } from "react"
 import { Controller, UseFormReturn, useFieldArray } from "react-hook-form"
 import { Citation, ExperienceLabelForm, SelectionState } from "./experience-labeler"
-import { MenuItem, Select } from "@mui/material"
+import { Button, MenuItem, Select } from "@mui/material"
 import AutocompleteChips from "./autocomplete-chips"
 import styles from "./label.module.scss"
 
@@ -38,6 +38,9 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
         const start = parseInt(citation.start)
         const end = parseInt(citation.end)
         setSelectionState((state) => ({ ...state, selection: { start, end } }))
+    }
+    const addCitation = () => {
+        citationArray.append({ start: 0, end: 1 })
     }
 
     useEffect(() => {
@@ -106,47 +109,70 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
                 </div>
             </div>
 
-            <div className="citations">
+            <div className="citations-container">
                 <div className="field-label">Citations</div>
-                {citationArray.fields.map((item, idx) => (
-                    <div
-                        key={item.id}
-                        onMouseEnter={() => onMouseEnter(item as any)}
-                        onMouseLeave={onMouseLeave}
-                        onFocus={(event: any) => setCitation(event, `${formPath}.citations.${idx}`)}
-                        onClick={(event: any) => setCitation(event, `${formPath}.citations.${idx}`)}
-                        onChange={(event: any) =>
-                            setCitation(event, `${formPath}.citations.${idx}`)
-                        }
-                        ref={(el) => (containerEls.current[idx] = el)}
-                        className="citations__inputs"
-                    >
-                        <Controller
-                            name={`${formPath}.citations.${idx}.start` as any}
-                            control={control}
-                            render={({ field }) => (
-                                <div className="boxed-input-container">
-                                    <div className="boxed-field-label">
-                                        <span>Start</span>
+                <div className="citations">
+                    {citationArray.fields.map((item, idx) => (
+                        <div
+                            key={item.id}
+                            onMouseEnter={() => onMouseEnter(item as any)}
+                            onMouseLeave={onMouseLeave}
+                            onFocus={(event: any) =>
+                                setCitation(event, `${formPath}.citations.${idx}`)
+                            }
+                            onClick={(event: any) =>
+                                setCitation(event, `${formPath}.citations.${idx}`)
+                            }
+                            onChange={(event: any) =>
+                                setCitation(event, `${formPath}.citations.${idx}`)
+                            }
+                            ref={(el) => (containerEls.current[idx] = el)}
+                            className="citations__inputs"
+                        >
+                            <Controller
+                                name={`${formPath}.citations.${idx}.start` as any}
+                                control={control}
+                                render={({ field }) => (
+                                    <div className="boxed-input-container">
+                                        <div className="boxed-field-label">
+                                            <span>Start</span>
+                                        </div>
+                                        <input
+                                            placeholder="Start"
+                                            type="number"
+                                            min="0"
+                                            {...field}
+                                        />
                                     </div>
-                                    <input placeholder="Start" type="number" min="0" {...field} />
-                                </div>
-                            )}
-                        />
-                        <Controller
-                            name={`${formPath}.citations.${idx}.end` as any}
-                            control={control}
-                            render={({ field }) => (
-                                <div className="boxed-input-container">
-                                    <div className="boxed-field-label">
-                                        <span>Stop</span>
+                                )}
+                            />
+                            <Controller
+                                name={`${formPath}.citations.${idx}.end` as any}
+                                control={control}
+                                render={({ field }) => (
+                                    <div className="boxed-input-container">
+                                        <div className="boxed-field-label">
+                                            <span>Stop</span>
+                                        </div>
+                                        <input
+                                            placeholder="Stop"
+                                            type="number"
+                                            min="0"
+                                            {...field}
+                                        />
                                     </div>
-                                    <input placeholder="Stop" type="number" min="0" {...field} />
-                                </div>
-                            )}
-                        />
-                    </div>
-                ))}
+                                )}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="add-citation-container">
+                <Button type="button" variant="outlined" onClick={addCitation}>
+                    <span className="icon">+</span>
+                    <span className="label">Add Citation</span>
+                </Button>
             </div>
         </div>
     )

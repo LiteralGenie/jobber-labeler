@@ -26,7 +26,7 @@ const Container = styled("div")(
         border-radius: 4px;
         overflow: hidden;
         
-        &:hover, &:focus {
+        &:hover, &:focus-within {
             border-color: #177ddc;
             box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
         }
