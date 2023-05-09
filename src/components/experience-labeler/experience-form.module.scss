@@ -1,7 +1,17 @@
 .form {
-    display: flex;
-    flex-flow: column;
-    input: {
-        color: "black";
+    :global {
+        display: flex;
+        flex-flow: column;
+
+        // Details should have border
+        .MuiAccordionDetails-root {
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            padding-top: 12px;
+        }
+
+        // Summary label should have emphasis
+        .summary-label {
+            font-weight: 500;
+        }
     }
 }

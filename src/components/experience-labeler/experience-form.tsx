@@ -60,16 +60,9 @@ export default function ExperienceForm({
                     key={idx}
                 >
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <span style={{ fontSize: "16px", fontWeight: 500 }}>
-                            {getLabelSummary(idx)}
-                        </span>
+                        <span className="summary-label">{getLabelSummary(idx)}</span>
                     </AccordionSummary>
-                    <AccordionDetails
-                        style={{
-                            borderTop: "1px solid rgba(255, 255, 255, 0.12)",
-                            paddingTop: "12px",
-                        }}
-                    >
+                    <AccordionDetails>
                         <Label.Component
                             key={item.id}
                             form={form}

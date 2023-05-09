@@ -1,8 +1,17 @@
-.container {
+// Loading view should be centered
+.labeler--loading {
+    align-items: center;
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    justify-content: center;
+}
+
+.form-wrapper {
+    // Form should have two columns, one for inputs, one for text-to-label
     :global {
         display: grid;
         grid-template-columns: 2fr 3fr;
-        font-size: 1rem;
         gap: 30px;
         margin: 40px;
     }

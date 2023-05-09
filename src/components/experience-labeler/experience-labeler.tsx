@@ -41,14 +41,14 @@ export default function ExperienceLabeler() {
         content = <FormWrapper {...{ sample, labels }} />
     } else {
         content = (
-            <div>
+            <div className={styles["labeler--loading"]}>
                 <pre>{status}</pre>
                 <pre>{JSON.stringify(sample, undefined, 2)}</pre>
                 <pre>{JSON.stringify(labels, undefined, 2)}</pre>
             </div>
         )
     }
-    return <div>{content}</div>
+    return content
 }
 
 function FormWrapper({
@@ -72,7 +72,7 @@ function FormWrapper({
     })
 
     return (
-        <div className={styles.container}>
+        <div className={styles["form-wrapper"]}>
             <ExperienceForm {...{ form, selectionState, setSelectionState }} />
             <Highlighter {...{ sample, selectionState, setSelectionState }} />
         </div>
