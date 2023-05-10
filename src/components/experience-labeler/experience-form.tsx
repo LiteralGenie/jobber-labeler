@@ -1,11 +1,12 @@
 import styles from "./experience-form.module.scss"
 import { UseFormReturn, useFieldArray } from "react-hook-form"
 import { ExperienceLabelForm, SelectionState } from "./experience-labeler"
-import { Dispatch, SetStateAction, useState } from "react"
-import { Accordion, AccordionDetails, AccordionSummary, Button, Paper } from "@mui/material"
+import { Dispatch, SetStateAction, useRef, useState } from "react"
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Paper } from "@mui/material"
 import { toTitleCase } from "@/utils"
 import * as Label from "./label"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
+import DeleteIcon from "@mui/icons-material/Delete"
 
 export type ExperienceFormProps = {
     form: UseFormReturn<ExperienceLabelForm>
@@ -24,11 +25,14 @@ export default function ExperienceForm({
         name: "labels",
     })
 
+    const containerRef = useRef<HTMLFormElement>(null)
+
     const onSubmit = (data: any) => {
         console.log(data)
         console.log("submit", getValues())
     }
     const onAddLabel = () => {
+        // Create new accordion
         labelFields.append({
             category: "general",
             min: 0,
@@ -36,9 +40,20 @@ export default function ExperienceForm({
             conditions: [],
             citations: [{ start: 0, end: 1 }],
         })
-        onAccordionToggle(true, labelFields.fields.length)
 
-        return false
+        // Open new accordion but avoid showing both closing animation (on old panel) and opening animation (on new panel)
+        disableClosingAnimation(openPanel)
+        onAccordionToggle(true, labelFields.fields.length)
+    }
+
+    const onDeleteLabel = (idx: number) => {
+        if (openPanel === idx) {
+            setOpenPanel(null)
+        } else if (openPanel !== null && openPanel > idx) {
+            setOpenPanel(openPanel - 1)
+        }
+
+        labelFields.remove(idx)
     }
 
     const [openPanel, setOpenPanel] = useState(0 as number | null)
@@ -53,8 +68,26 @@ export default function ExperienceForm({
         return `${toTitleCase(d.category)} - ${minStr} to ${maxStr} YoE`
     }
 
+    const disableClosingAnimation = (idx: number | null) => {
+        if (idx === null) return
+
+        const accordionEl =
+            containerRef.current?.querySelectorAll<HTMLFormElement>(".MuiCollapse-root")[idx]
+        if (!accordionEl) {
+            console.error(`Open accordion at index ${idx} not found.`)
+            return
+        }
+
+        // Hack for killing the animation
+        // Ideally we'd override transition-duration in the CSS,
+        // but the styles are being set via JS on open / close,
+        // making the override timing difficult
+        accordionEl.style.display = "none"
+        setTimeout(() => (accordionEl.style.display = ""), 0)
+    }
+
     return (
-        <form className={styles.container}>
+        <form ref={containerRef} className={styles.container}>
             <div>
                 {labelFields.fields.map((item, idx) => (
                     <Accordion
@@ -62,9 +95,15 @@ export default function ExperienceForm({
                         expanded={openPanel === idx}
                         key={idx}
                     >
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <span className="summary-label">{getLabelSummary(idx)}</span>
-                        </AccordionSummary>
+                        <Box className="accordion-summary-container">
+                            <AccordionSummary>
+                                <span className="summary-label">{getLabelSummary(idx)}</span>
+                            </AccordionSummary>
+                            <div className="actions">
+                                <DeleteIcon onClick={() => onDeleteLabel(idx)} className="delete" />
+                                <ExpandMoreIcon className="expand" />
+                            </div>
+                        </Box>
                         <AccordionDetails>
                             <Label.Component
                                 key={item.id}

@@ -53,5 +53,36 @@
         .MuiAccordion-root:last-of-type.Mui-expanded {
             margin-bottom: 0;
         }
+
+        // Add buttons to accordion summary
+        .accordion-summary-container {
+            display: grid;
+            grid-template-columns: 1fr max-content;
+
+            .actions {
+                align-items: center;
+                display: flex;
+                gap: 12px;
+                padding-right: 16px;
+
+                & > * {
+                    cursor: pointer;
+                }
+            }
+        }
+
+        // Rotate the expand icon when accordion opened
+        // (from MUI's default styles)
+        .Mui-expanded .expand {
+            transform: rotate(180deg);
+        }
+        .expand {
+            transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+        }
+
+        // Trashcan icon is too big relative to expand icon
+        .actions .delete {
+            transform: scale(0.8);
+        }
     }
 }
