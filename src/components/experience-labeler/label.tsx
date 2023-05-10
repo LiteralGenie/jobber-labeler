@@ -4,6 +4,7 @@ import { Citation, ExperienceLabelForm, SelectionState } from "./experience-labe
 import { Button, MenuItem, Select } from "@mui/material"
 import AutocompleteChips from "./autocomplete-chips"
 import styles from "./label.module.scss"
+import CloseIcon from "@mui/icons-material/Close"
 
 export type Props = {
     form: UseFormReturn<ExperienceLabelForm>
@@ -21,6 +22,28 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
     })
     const containerEls = useRef<Array<HTMLDivElement | null>>([])
 
+    // When a citation is focused, highlight the corresponding text in <Highlighter />
+    const setCitation = (event: FocusEvent, path: string) => {
+        event.preventDefault()
+
+        const props = path.split(".")
+        const citation = props.reduce((val, prop) => val[prop], form.getValues() as any)
+        if (!citation) return
+
+        const start = parseInt(citation.start)
+        const end = parseInt(citation.end)
+        setSelectionState((state) => ({ ...state, selection: { start, end } }))
+    }
+
+    // Add / delete citations
+    const addCitation = () => {
+        citationArray.append({ start: 0, end: 1 })
+    }
+    const onDeleteCitation = (idx: number) => {
+        citationArray.remove(idx)
+    }
+
+    // When citation is hovered, (subtly) highlight the corresponding text
     const onMouseEnter = (item: Citation) =>
         setSelectionState((state) => {
             const { start, end } = item
@@ -30,18 +53,6 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
         setSelectionState((state) => {
             return { ...state, secondarySelections: [] }
         })
-    const setCitation = (event: FocusEvent, path: string) => {
-        event.preventDefault()
-
-        const props = path.split(".")
-        const citation = props.reduce((val, prop) => val[prop], form.getValues() as any)
-        const start = parseInt(citation.start)
-        const end = parseInt(citation.end)
-        setSelectionState((state) => ({ ...state, selection: { start, end } }))
-    }
-    const addCitation = () => {
-        citationArray.append({ start: 0, end: 1 })
-    }
 
     useEffect(() => {
         citationArray.fields.forEach((_, idx) => {
@@ -163,6 +174,13 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
                                     </div>
                                 )}
                             />
+
+                            <div>
+                                <CloseIcon
+                                    onClick={() => onDeleteCitation(idx)}
+                                    className={["delete", idx === 0 ? "disabled" : ""].join(" ")}
+                                ></CloseIcon>
+                            </div>
                         </div>
                     ))}
                 </div>

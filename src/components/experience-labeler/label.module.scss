@@ -18,9 +18,10 @@
             text-align: left;
 
             .citations__inputs {
+                align-items: center;
                 display: grid;
                 gap: 8px;
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr 1fr 24px;
             }
         }
         .citations {
@@ -120,6 +121,15 @@
                     margin-right: 0.25rem;
                 }
             }
+        }
+
+        // Clickable things should look clickable
+        .delete {
+            cursor: pointer;
+        }
+        .delete.disabled {
+            opacity: 0.3;
+            pointer-events: none;
         }
     }
 }
