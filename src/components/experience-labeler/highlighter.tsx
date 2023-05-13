@@ -31,6 +31,7 @@ export default function Highlighter({
     const containerRef = useRef<HTMLDivElement>(null)
     const [rects, setRects] = useState<DOMRect[]>([])
 
+    // Handle selections
     useEffect(
         () => onSelection(containerRef, activeSelectionState, form.setValue),
         [containerRef, activeSelectionState, form]
@@ -39,8 +40,21 @@ export default function Highlighter({
         () => onSelectionStartEnd(containerRef, setActiveSelectionState, activeCitationPath),
         [setActiveSelectionState, activeCitationPath]
     )
+
+    // Handle highlights (fake selections)
     useEffect(() => {
         onUpdateRects(highlightState, activeSelectionState, containerRef, setRects)
+    }, [highlightState, activeSelectionState, containerRef, setRects])
+
+    // Handle window resize
+    useEffect(() => {
+        const sub = fromEvent(window, "resize").subscribe(() => {
+            onUpdateRects(highlightState, activeSelectionState, containerRef, setRects)
+        })
+
+        return () => {
+            sub.unsubscribe()
+        }
     }, [highlightState, activeSelectionState, containerRef, setRects])
 
     return (
