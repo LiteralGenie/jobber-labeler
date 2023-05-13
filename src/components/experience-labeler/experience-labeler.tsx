@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form"
 import { Paper } from "@mui/material"
 
 export type Citation = { start: number; end: number }
+export type CitationPath = `labels.${number}.citations.${number}`
 
 export type ExperienceLabelForm = {
     labels: Array<{
@@ -22,15 +23,19 @@ export type ExperienceLabelForm = {
     }>
 }
 
-export type SelectionState = {
-    // Text that's highlighted
-    selection: Citation | null
-    // Text outlined with dotted box (for minor emphasis)
-    secondarySelections: Citation[]
+// Native text selection
+export type ActiveSelectionState = {
     // Input that was focused when the user started highlighting
-    initialFocusEl: Element | null
+    activeCitation: {
+        path: CitationPath
+        element: HTMLInputElement
+    } | null
     isSelecting: boolean
+    selection: Citation | null
 }
+
+// Citations to preview
+export type HighlightState = Citation[]
 
 export default function ExperienceLabeler() {
     // Load API data
@@ -65,18 +70,39 @@ function FormWrapper({
     const defaultValues = labels.length ? { labels } : { labels: defaultLabels }
     const form = useForm<ExperienceLabelForm>({ defaultValues })
 
-    const [selectionState, setSelectionState] = useState<SelectionState>({
-        selection: null,
-        secondarySelections: [],
-        initialFocusEl: null,
+    const [activeSelectionState, setActiveSelectionState] = useState<ActiveSelectionState>({
+        activeCitation: null,
         isSelecting: false,
+        selection: null,
     })
+
+    const [highlightState, setHighlightState] = useState<HighlightState>([])
+
+    const [activeCitationPath, setActiveCitationPath] = useState<
+        `labels.${number}.citations.${number}` | null
+    >(null)
 
     return (
         <div className={styles["form-wrapper"]}>
-            <ExperienceForm {...{ form, selectionState, setSelectionState }} />
+            <ExperienceForm
+                {...{
+                    form,
+                    activeSelectionState,
+                    setActiveSelectionState,
+                    activeCitationPath,
+                    setActiveCitationPath,
+                }}
+            />
             <Paper elevation={1} style={{ padding: "24px 48px", height: "100%" }}>
-                <Highlighter {...{ sample, selectionState, setSelectionState }} />
+                <Highlighter
+                    {...{
+                        form,
+                        sample,
+                        activeSelectionState,
+                        setActiveSelectionState,
+                        activeCitationPath,
+                    }}
+                />
             </Paper>
         </div>
     )

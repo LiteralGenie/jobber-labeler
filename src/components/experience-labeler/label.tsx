@@ -1,6 +1,11 @@
 import { Dispatch, SetStateAction, useEffect, useRef } from "react"
 import { Controller, UseFormReturn, useFieldArray } from "react-hook-form"
-import { Citation, ExperienceLabelForm, SelectionState } from "./experience-labeler"
+import {
+    Citation,
+    ExperienceLabelForm,
+    ActiveSelectionState,
+    CitationPath,
+} from "./experience-labeler"
 import { Button, MenuItem, Select } from "@mui/material"
 import AutocompleteChips from "./autocomplete-chips"
 import styles from "./label.module.scss"
@@ -8,12 +13,21 @@ import CloseIcon from "@mui/icons-material/Close"
 
 export type Props = {
     form: UseFormReturn<ExperienceLabelForm>
-    formPath: string
-    selectionState: SelectionState
-    setSelectionState: Dispatch<SetStateAction<SelectionState>>
+    formPath: `labels.${number}`
+    activeSelectionState: ActiveSelectionState
+    setActiveSelectionState: Dispatch<SetStateAction<ActiveSelectionState>>
+    activeCitationPath: CitationPath | null
+    setActiveCitationPath: Dispatch<SetStateAction<CitationPath | null>>
 }
 
-export function Component({ form, formPath, selectionState, setSelectionState }: Props) {
+export function Component({
+    form,
+    formPath,
+    activeSelectionState,
+    setActiveSelectionState,
+    activeCitationPath,
+    setActiveCitationPath,
+}: Props) {
     const { setValue, control } = form
 
     const citationArray = useFieldArray({
@@ -23,17 +37,10 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
     const containerEls = useRef<Array<HTMLDivElement | null>>([])
 
     // When a citation is focused, highlight the corresponding text in <Highlighter />
-    const setCitation = (event: FocusEvent, path: string) => {
-        event.preventDefault()
-
-        const props = path.split(".")
-        const citation = props.reduce((val, prop) => val[prop], form.getValues() as any)
-        if (!citation) return
-
-        const start = parseInt(citation.start)
-        const end = parseInt(citation.end)
-        setSelectionState((state) => ({ ...state, selection: { start, end } }))
-    }
+    // const updateActiveCitationPath = (event: FocusEvent, path: CitationPath) => {
+    //     // event.preventDefault()
+    //     setActiveCitationPath(path)
+    // }
 
     // Add / delete citations
     const addCitation = () => {
@@ -44,22 +51,15 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
     }
 
     // When citation is hovered, (subtly) highlight the corresponding text
-    const onMouseEnter = (item: Citation) =>
-        setSelectionState((state) => {
-            const { start, end } = item
-            return { ...state, secondarySelections: [{ start, end }] }
-        })
-    const onMouseLeave = () =>
-        setSelectionState((state) => {
-            return { ...state, secondarySelections: [] }
-        })
-
-    useEffect(() => {
-        citationArray.fields.forEach((_, idx) => {
-            const containerEl = containerEls.current[idx]
-            onSelectionChange(selectionState, containerEl, setValue, `${formPath}.citations.${idx}`)
-        })
-    }, [selectionState, citationArray, setValue, formPath])
+    // const onMouseEnter = (item: Citation) =>
+    //     setActiveSelectionState((state) => {
+    //         const { start, end } = item
+    //         return { ...state, secondarySelections: [{ start, end }] }
+    //     })
+    // const onMouseLeave = () =>
+    //     setActiveSelectionState((state) => {
+    //         return { ...state, secondarySelections: [] }
+    //     })
 
     return (
         <div className={styles.label}>
@@ -126,17 +126,18 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
                     {citationArray.fields.map((item, idx) => (
                         <div
                             key={item.id}
-                            onMouseEnter={() => onMouseEnter(item as any)}
-                            onMouseLeave={onMouseLeave}
+                            // onMouseEnter={() => onMouseEnter(item as any)}
+                            // onMouseLeave={onMouseLeave}
                             onFocus={(event: any) =>
-                                setCitation(event, `${formPath}.citations.${idx}`)
+                                // setCitation(event, `${formPath}.citations.${idx}`)
+                                setActiveCitationPath(`${formPath}.citations.${idx}`)
                             }
-                            onClick={(event: any) =>
-                                setCitation(event, `${formPath}.citations.${idx}`)
-                            }
-                            onChange={(event: any) =>
-                                setCitation(event, `${formPath}.citations.${idx}`)
-                            }
+                            // onClick={(event: any) =>
+                            //     setCitation(event, `${formPath}.citations.${idx}`)
+                            // }
+                            // onChange={(event: any) =>
+                            //     setCitation(event, `${formPath}.citations.${idx}`)
+                            // }
                             ref={(el) => (containerEls.current[idx] = el)}
                             className="citations__inputs"
                         >
@@ -194,20 +195,4 @@ export function Component({ form, formPath, selectionState, setSelectionState }:
             </div>
         </div>
     )
-}
-
-function onSelectionChange(
-    state: SelectionState,
-    containerEl: HTMLElement | null,
-    setValue: any,
-    citationPath: string
-): true | undefined {
-    if (!state.selection) return
-    if (!state.initialFocusEl) return
-    if (!containerEl?.contains(state.initialFocusEl)) return
-
-    let { start, end } = state.selection
-    if (start > end) [start, end] = [end, start]
-
-    setValue(citationPath, { start, end })
 }

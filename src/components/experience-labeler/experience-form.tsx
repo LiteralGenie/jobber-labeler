@@ -1,6 +1,6 @@
 import styles from "./experience-form.module.scss"
 import { UseFormReturn, useFieldArray } from "react-hook-form"
-import { ExperienceLabelForm, SelectionState } from "./experience-labeler"
+import { ExperienceLabelForm, ActiveSelectionState, CitationPath } from "./experience-labeler"
 import { Dispatch, SetStateAction, useRef, useState } from "react"
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Paper } from "@mui/material"
 import { toTitleCase } from "@/utils"
@@ -10,14 +10,18 @@ import DeleteIcon from "@mui/icons-material/Delete"
 
 export type ExperienceFormProps = {
     form: UseFormReturn<ExperienceLabelForm>
-    selectionState: SelectionState
-    setSelectionState: Dispatch<SetStateAction<SelectionState>>
+    activeSelectionState: ActiveSelectionState
+    setActiveSelectionState: Dispatch<SetStateAction<ActiveSelectionState>>
+    activeCitationPath: CitationPath | null
+    setActiveCitationPath: Dispatch<SetStateAction<CitationPath | null>>
 }
 
 export default function ExperienceForm({
     form,
-    selectionState,
-    setSelectionState,
+    activeSelectionState,
+    setActiveSelectionState,
+    activeCitationPath,
+    setActiveCitationPath,
 }: ExperienceFormProps) {
     const { control, getValues } = form
     const labelFields = useFieldArray({
@@ -109,8 +113,10 @@ export default function ExperienceForm({
                                 key={item.id}
                                 form={form}
                                 formPath={`labels.${idx}`}
-                                selectionState={selectionState}
-                                setSelectionState={setSelectionState}
+                                activeSelectionState={activeSelectionState}
+                                setActiveSelectionState={setActiveSelectionState}
+                                activeCitationPath={activeCitationPath}
+                                setActiveCitationPath={setActiveCitationPath}
                             />
                         </AccordionDetails>
                     </Accordion>

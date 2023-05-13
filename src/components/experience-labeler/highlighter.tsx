@@ -1,69 +1,72 @@
-/** @jsxImportSource @emotion/react */
-
 import { IndeedPost } from "@/models"
-import { css } from "@emotion/react"
-import { SelectionState } from "./experience-labeler"
-import { filter, fromEvent, map, merge, tap, withLatestFrom } from "rxjs"
+import styles from "./highlighter.module.scss"
+import { ActiveSelectionState, CitationPath, ExperienceLabelForm } from "./experience-labeler"
+import { exhaustMap, fromEvent, map, merge, take, tap } from "rxjs"
 import { Dispatch, RefObject, SetStateAction, useEffect, useRef } from "react"
+import { UseFormReturn, UseFormSetValue } from "react-hook-form"
 
 export type HighlighterProps = {
+    form: UseFormReturn<ExperienceLabelForm>
     sample: IndeedPost.Model
-    selectionState: SelectionState
-    setSelectionState: Dispatch<SetStateAction<SelectionState>>
+    activeSelectionState: ActiveSelectionState
+    setActiveSelectionState: Dispatch<SetStateAction<ActiveSelectionState>>
+    activeCitationPath: CitationPath | null
 }
 
 export default function Highlighter({
+    form,
     sample,
-    selectionState,
-    setSelectionState,
+    activeSelectionState,
+    setActiveSelectionState,
+    activeCitationPath,
 }: HighlighterProps) {
     const containerRef = useRef<HTMLDivElement>(null)
-    useEffect(() => onSelection(containerRef, setSelectionState), [containerRef, setSelectionState])
     useEffect(
-        () => onSelectionEnd(selectionState, setSelectionState),
-        [selectionState, setSelectionState]
+        () => onSelection(containerRef, activeSelectionState, form.setValue),
+        [containerRef, activeSelectionState, form]
     )
-    useEffect(() => onSelectionChange(containerRef, selectionState), [containerRef, selectionState])
+    useEffect(
+        () => onSelectionStartEnd(containerRef, setActiveSelectionState, activeCitationPath),
+        [setActiveSelectionState, activeCitationPath]
+    )
 
     return (
-        <div ref={containerRef} css={styles}>
+        <div ref={containerRef} className={styles.container}>
             {sample.textContent}
         </div>
     )
 }
 
-const styles = css({
-    whiteSpace: "pre-wrap",
-})
-
 function onSelection(
     target: RefObject<HTMLElement>,
-    setSelectionState: HighlighterProps["setSelectionState"]
+    activeSelectionState: ActiveSelectionState,
+    setFormValue: UseFormSetValue<ExperienceLabelForm>
 ) {
     const tgt = target.current
     if (tgt === null) return
 
-    const select$ = fromEvent<Event>(document, "selectionchange")
-    const mousedown$ = fromEvent<Event>(document, "mousedown")
-
+    const select$ = fromEvent<any>(document, "selectionchange")
     const handleSelect$ = select$.pipe(
-        withLatestFrom(mousedown$.pipe(map(() => document.activeElement))),
-        map(([_, activeEl]) => [activeEl, document.getSelection() as Selection] as const),
-        map(([activeEl, sel]) => {
-            const { anchorNode, focusNode } = sel as { anchorNode: Node; focusNode: Node }
-            let update: Partial<SelectionState> = { initialFocusEl: activeEl }
+        tap(() => {
+            if (!activeSelectionState.activeCitation) {
+                return
+            }
+
+            const sel = window.getSelection() as Selection
+            const { anchorNode, focusNode } = sel as {
+                anchorNode: Node
+                focusNode: Node
+            }
 
             // Check if sample text was in the selection
             const ranges = [...Array(sel.rangeCount).keys()].map((i) => sel.getRangeAt(i))
             const isTargetSelected = ranges.some((r) => r.intersectsNode(tgt))
             if (!isTargetSelected) {
-                update.selection = null
-                return setSelectionState((state) => ({ ...state, ...update }))
+                return
             }
 
             // Find where selection starts (inclusive) / ends (exclusive) wrt target
-            update.selection = { start: 0, end: tgt.textContent!.length }
-
+            let selection = { start: 0, end: tgt.textContent!.length }
             const position = anchorNode.compareDocumentPosition(focusNode)
             const direction = position === Node.DOCUMENT_POSITION_PRECEDING ? "backward" : "forward"
 
@@ -71,83 +74,90 @@ function onSelection(
                 node === tgt || Array.from(tgt.childNodes).some((tgtChild) => node === tgtChild)
             if (isTargetNode(anchorNode) && isTargetNode(focusNode)) {
                 const [start, end] = [sel.anchorOffset, sel.focusOffset]
-                update.selection = { start, end }
+                selection = { start, end }
             } else if (isTargetNode(anchorNode)) {
                 if (direction === "forward") {
-                    update.selection.start = sel.anchorOffset
+                    selection.start = sel.anchorOffset
                 } else {
-                    update.selection.end = sel.anchorOffset
+                    selection.end = sel.anchorOffset
                 }
             } else if (isTargetNode(focusNode)) {
                 if (direction === "forward") {
-                    update.selection.start = sel.focusOffset
+                    selection.start = sel.focusOffset
                 } else {
-                    update.selection.end = sel.focusOffset
+                    selection.end = sel.focusOffset
                 }
             }
 
-            // Notify of selection change
-            if (update.selection.start === update.selection.end) {
-                update.selection = null
+            if (selection.start === selection.end) {
+                return
             }
 
-            return setSelectionState((state) => ({ ...state, ...update }))
+            // Notify of selection change
+            return setFormValue(activeSelectionState.activeCitation.path, selection)
         })
     )
 
     const sub = merge(handleSelect$).subscribe()
-    return () => sub.unsubscribe()
+    return () => {
+        sub.unsubscribe()
+    }
 }
 
-function onSelectionEnd(
-    selectionState: SelectionState,
-    setSelectionState: HighlighterProps["setSelectionState"]
+function onSelectionStartEnd(
+    target: RefObject<HTMLElement>,
+    setActiveSelectionState: HighlighterProps["setActiveSelectionState"],
+    activeCitationPath: CitationPath | null
 ) {
-    const mousedown$ = fromEvent<MouseEvent>(document, "mousedown")
+    const tgt = target.current
+    if (tgt === null) return
+
+    const mousedown$ = fromEvent<MouseEvent>(tgt, "mousedown")
     const mouseup$ = fromEvent<Event>(document, "mouseup")
 
-    const dragStart$ = mousedown$.pipe(
-        tap(() => setSelectionState((state) => ({ ...state, isSelecting: true })))
-    )
-    const dragEnd$ = mouseup$.pipe(
-        filter(() => selectionState.isSelecting),
-        tap(() => {
-            if (selectionState.initialFocusEl?.tagName === "INPUT" && selectionState.selection)
-                (selectionState.initialFocusEl as HTMLInputElement).focus()
-            setSelectionState((state) => ({ ...state, isSelecting: false }))
-        })
-    )
+    const sub = mousedown$
+        .pipe(
+            map(() =>
+                activeCitationPath
+                    ? {
+                          path: activeCitationPath,
+                          element: document.activeElement as HTMLInputElement,
+                      }
+                    : null
+            ),
+            tap((activeCitation) => {
+                setActiveSelectionState((state) => ({
+                    ...state,
+                    activeCitation: activeCitation,
+                    isSelecting: true,
+                }))
+            }),
+            exhaustMap((activeCitation) =>
+                mouseup$.pipe(
+                    take(1),
+                    map(() => activeCitation)
+                )
+            ),
+            tap((activeCitation) => {
+                if (!activeCitation) {
+                    return
+                }
+                const { path, element } = activeCitation
 
-    const sub = merge(dragStart$, dragEnd$).subscribe()
-    return () => sub.unsubscribe()
-}
+                console.log("end", path, element)
+                if (path && element) {
+                    ;(element as HTMLInputElement).focus()
+                }
+                setActiveSelectionState((state) => ({
+                    ...state,
+                    activeCitation: null,
+                    isSelecting: false,
+                }))
+            })
+        )
+        .subscribe()
 
-function onSelectionChange(
-    target: RefObject<HTMLElement>,
-    { selection, isSelecting }: SelectionState
-) {
-    if (!selection) return
-    if (isSelecting) return
-    const { start, end } = selection
-
-    const tgt = target.current
-    if (!tgt) return
-
-    const sel = window.getSelection() as Selection
-    const textNode = tgt.childNodes[0]
-    if (
-        sel.anchorNode === textNode &&
-        sel.focusNode === textNode &&
-        sel.anchorOffset === start &&
-        sel.focusOffset === end
-    ) {
-        return
+    return () => {
+        sub.unsubscribe()
     }
-
-    const range = document.createRange()
-    range.setStart(textNode, start)
-    range.setEnd(textNode, end)
-
-    sel.removeAllRanges()
-    sel.addRange(range)
 }
