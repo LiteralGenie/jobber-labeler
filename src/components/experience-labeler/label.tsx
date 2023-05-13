@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useRef } from "react"
+import { Dispatch, SetStateAction, useRef } from "react"
 import { Controller, UseFormReturn, useFieldArray } from "react-hook-form"
 import {
     Citation,
@@ -15,20 +15,20 @@ export type Props = {
     form: UseFormReturn<ExperienceLabelForm>
     formPath: `labels.${number}`
     activeSelectionState: ActiveSelectionState
-    setActiveSelectionState: Dispatch<SetStateAction<ActiveSelectionState>>
     activeCitationPath: CitationPath | null
     setActiveCitationPath: Dispatch<SetStateAction<CitationPath | null>>
+    setHighlightState: Dispatch<SetStateAction<Citation[]>>
 }
 
 export function Component({
     form,
     formPath,
     activeSelectionState,
-    setActiveSelectionState,
     activeCitationPath,
     setActiveCitationPath,
+    setHighlightState,
 }: Props) {
-    const { setValue, control } = form
+    const { control, getValues } = form
 
     const citationArray = useFieldArray({
         control: form.control,
@@ -37,10 +37,12 @@ export function Component({
     const containerEls = useRef<Array<HTMLDivElement | null>>([])
 
     // When a citation is focused, highlight the corresponding text in <Highlighter />
-    // const updateActiveCitationPath = (event: FocusEvent, path: CitationPath) => {
-    //     // event.preventDefault()
-    //     setActiveCitationPath(path)
-    // }
+    const setHighlight = (path: CitationPath) => {
+        setHighlightState([getValues(path)])
+    }
+    const clearHighlights = () => {
+        setHighlightState([])
+    }
 
     // Add / delete citations
     const addCitation = () => {
@@ -49,17 +51,6 @@ export function Component({
     const onDeleteCitation = (idx: number) => {
         citationArray.remove(idx)
     }
-
-    // When citation is hovered, (subtly) highlight the corresponding text
-    // const onMouseEnter = (item: Citation) =>
-    //     setActiveSelectionState((state) => {
-    //         const { start, end } = item
-    //         return { ...state, secondarySelections: [{ start, end }] }
-    //     })
-    // const onMouseLeave = () =>
-    //     setActiveSelectionState((state) => {
-    //         return { ...state, secondarySelections: [] }
-    //     })
 
     return (
         <div className={styles.label}>
@@ -126,18 +117,20 @@ export function Component({
                     {citationArray.fields.map((item, idx) => (
                         <div
                             key={item.id}
-                            // onMouseEnter={() => onMouseEnter(item as any)}
-                            // onMouseLeave={onMouseLeave}
-                            onFocus={(event: any) =>
-                                // setCitation(event, `${formPath}.citations.${idx}`)
+                            onMouseEnter={() => setHighlight(`${formPath}.citations.${idx}`)}
+                            onMouseLeave={() => {
+                                if (activeCitationPath === null) clearHighlights()
+                            }}
+                            onFocus={() => {
+                                setHighlight(`${formPath}.citations.${idx}`)
                                 setActiveCitationPath(`${formPath}.citations.${idx}`)
-                            }
-                            // onClick={(event: any) =>
-                            //     setCitation(event, `${formPath}.citations.${idx}`)
-                            // }
-                            // onChange={(event: any) =>
-                            //     setCitation(event, `${formPath}.citations.${idx}`)
-                            // }
+                            }}
+                            onBlur={() => {
+                                clearHighlights()
+                                if (false === activeSelectionState.isSelecting)
+                                    setActiveCitationPath(null)
+                            }}
+                            onChange={() => setHighlight(`${formPath}.citations.${idx}`)}
                             ref={(el) => (containerEls.current[idx] = el)}
                             className="citations__inputs"
                         >
@@ -145,7 +138,15 @@ export function Component({
                                 name={`${formPath}.citations.${idx}.start` as any}
                                 control={control}
                                 render={({ field }) => (
-                                    <div className="boxed-input-container">
+                                    <div
+                                        className={[
+                                            "boxed-input-container",
+                                            activeCitationPath === `${formPath}.citations.${idx}` &&
+                                            activeSelectionState.isSelecting
+                                                ? "focused"
+                                                : "",
+                                        ].join(" ")}
+                                    >
                                         <div className="boxed-field-label">
                                             <span>Start</span>
                                         </div>
@@ -162,7 +163,15 @@ export function Component({
                                 name={`${formPath}.citations.${idx}.end` as any}
                                 control={control}
                                 render={({ field }) => (
-                                    <div className="boxed-input-container">
+                                    <div
+                                        className={[
+                                            "boxed-input-container",
+                                            activeCitationPath === `${formPath}.citations.${idx}` &&
+                                            activeSelectionState.isSelecting
+                                                ? "focused"
+                                                : "",
+                                        ].join(" ")}
+                                    >
                                         <div className="boxed-field-label">
                                             <span>Stop</span>
                                         </div>

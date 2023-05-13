@@ -75,6 +75,7 @@
             overflow: hidden;
 
             // Highlight on hover / focus
+            &.focused,
             &:focus-within,
             &:hover {
                 border-color: #177ddc;

@@ -1,6 +1,11 @@
 import styles from "./experience-form.module.scss"
 import { UseFormReturn, useFieldArray } from "react-hook-form"
-import { ExperienceLabelForm, ActiveSelectionState, CitationPath } from "./experience-labeler"
+import {
+    ExperienceLabelForm,
+    ActiveSelectionState,
+    CitationPath,
+    Citation,
+} from "./experience-labeler"
 import { Dispatch, SetStateAction, useRef, useState } from "react"
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Paper } from "@mui/material"
 import { toTitleCase } from "@/utils"
@@ -14,6 +19,8 @@ export type ExperienceFormProps = {
     setActiveSelectionState: Dispatch<SetStateAction<ActiveSelectionState>>
     activeCitationPath: CitationPath | null
     setActiveCitationPath: Dispatch<SetStateAction<CitationPath | null>>
+    highlightState: Citation[]
+    setHighlightState: Dispatch<SetStateAction<Citation[]>>
 }
 
 export default function ExperienceForm({
@@ -22,6 +29,8 @@ export default function ExperienceForm({
     setActiveSelectionState,
     activeCitationPath,
     setActiveCitationPath,
+    highlightState,
+    setHighlightState,
 }: ExperienceFormProps) {
     const { control, getValues } = form
     const labelFields = useFieldArray({
@@ -117,6 +126,8 @@ export default function ExperienceForm({
                                 setActiveSelectionState={setActiveSelectionState}
                                 activeCitationPath={activeCitationPath}
                                 setActiveCitationPath={setActiveCitationPath}
+                                highlightState={highlightState}
+                                setHighlightState={setHighlightState}
                             />
                         </AccordionDetails>
                     </Accordion>

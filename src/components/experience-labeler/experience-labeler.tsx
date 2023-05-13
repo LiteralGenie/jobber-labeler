@@ -91,6 +91,8 @@ function FormWrapper({
                     setActiveSelectionState,
                     activeCitationPath,
                     setActiveCitationPath,
+                    highlightState,
+                    setHighlightState,
                 }}
             />
             <Paper elevation={1} style={{ padding: "24px 48px", height: "100%" }}>
@@ -101,6 +103,7 @@ function FormWrapper({
                         activeSelectionState,
                         setActiveSelectionState,
                         activeCitationPath,
+                        highlightState,
                     }}
                 />
             </Paper>

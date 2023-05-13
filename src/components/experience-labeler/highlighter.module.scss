@@ -1,3 +1,13 @@
 .container {
-    white-space: pre-wrap;
+    :global {
+        white-space: pre-wrap;
+
+        .highlight-overlay {
+            pointer-events: none;
+        }
+        .highlight-overlay > * {
+            background-color: hsla(335, 100%, 35%, 0.32);
+            position: absolute;
+        }
+    }
 }

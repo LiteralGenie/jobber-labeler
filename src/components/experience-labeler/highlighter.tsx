@@ -1,8 +1,14 @@
 import { IndeedPost } from "@/models"
 import styles from "./highlighter.module.scss"
-import { ActiveSelectionState, CitationPath, ExperienceLabelForm } from "./experience-labeler"
+import {
+    ActiveSelectionState,
+    Citation,
+    CitationPath,
+    ExperienceLabelForm,
+    HighlightState,
+} from "./experience-labeler"
 import { exhaustMap, fromEvent, map, merge, take, tap } from "rxjs"
-import { Dispatch, RefObject, SetStateAction, useEffect, useRef } from "react"
+import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from "react"
 import { UseFormReturn, UseFormSetValue } from "react-hook-form"
 
 export type HighlighterProps = {
@@ -11,6 +17,7 @@ export type HighlighterProps = {
     activeSelectionState: ActiveSelectionState
     setActiveSelectionState: Dispatch<SetStateAction<ActiveSelectionState>>
     activeCitationPath: CitationPath | null
+    highlightState: Citation[]
 }
 
 export default function Highlighter({
@@ -19,8 +26,11 @@ export default function Highlighter({
     activeSelectionState,
     setActiveSelectionState,
     activeCitationPath,
+    highlightState,
 }: HighlighterProps) {
     const containerRef = useRef<HTMLDivElement>(null)
+    const [rects, setRects] = useState<DOMRect[]>([])
+
     useEffect(
         () => onSelection(containerRef, activeSelectionState, form.setValue),
         [containerRef, activeSelectionState, form]
@@ -29,10 +39,26 @@ export default function Highlighter({
         () => onSelectionStartEnd(containerRef, setActiveSelectionState, activeCitationPath),
         [setActiveSelectionState, activeCitationPath]
     )
+    useEffect(() => {
+        onUpdateRects(highlightState, activeSelectionState, containerRef, setRects)
+    }, [highlightState, activeSelectionState, containerRef, setRects])
 
     return (
         <div ref={containerRef} className={styles.container}>
             {sample.textContent}
+            <div className="highlight-overlay">
+                {rects.map((r, idx) => (
+                    <div
+                        key={idx}
+                        style={{
+                            top: r.top,
+                            left: r.left,
+                            height: r.height,
+                            width: r.width,
+                        }}
+                    ></div>
+                ))}
+            </div>
         </div>
     )
 }
@@ -144,7 +170,6 @@ function onSelectionStartEnd(
                 }
                 const { path, element } = activeCitation
 
-                console.log("end", path, element)
                 if (path && element) {
                     ;(element as HTMLInputElement).focus()
                 }
@@ -160,4 +185,29 @@ function onSelectionStartEnd(
     return () => {
         sub.unsubscribe()
     }
+}
+
+function onUpdateRects(
+    highlightState: HighlightState,
+    activeSelectionState: ActiveSelectionState,
+    containerRef: RefObject<HTMLElement>,
+    setRects: Dispatch<SetStateAction<DOMRect[]>>
+) {
+    if (activeSelectionState.isSelecting) return
+
+    const tgt = containerRef.current?.childNodes[0]
+    if (!tgt) return
+
+    const sel = window.getSelection() as Selection
+    sel.removeAllRanges()
+
+    let rectsUpdate: DOMRect[] = []
+    for (let citation of highlightState) {
+        const range = document.createRange()
+        range.setStart(tgt, citation.start)
+        range.setEnd(tgt, citation.end)
+        rectsUpdate = rectsUpdate.concat([...range.getClientRects()])
+    }
+
+    setRects(rectsUpdate)
 }
