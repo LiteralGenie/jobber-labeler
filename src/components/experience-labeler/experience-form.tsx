@@ -16,20 +16,16 @@ import DeleteIcon from "@mui/icons-material/Delete"
 export type ExperienceFormProps = {
     form: UseFormReturn<ExperienceLabelForm>
     activeSelectionState: ActiveSelectionState
-    setActiveSelectionState: Dispatch<SetStateAction<ActiveSelectionState>>
     activeCitationPath: CitationPath | null
     setActiveCitationPath: Dispatch<SetStateAction<CitationPath | null>>
-    highlightState: Citation[]
     setHighlightState: Dispatch<SetStateAction<Citation[]>>
 }
 
 export default function ExperienceForm({
     form,
     activeSelectionState,
-    setActiveSelectionState,
     activeCitationPath,
     setActiveCitationPath,
-    highlightState,
     setHighlightState,
 }: ExperienceFormProps) {
     const { control, getValues } = form
@@ -123,10 +119,8 @@ export default function ExperienceForm({
                                 form={form}
                                 formPath={`labels.${idx}`}
                                 activeSelectionState={activeSelectionState}
-                                setActiveSelectionState={setActiveSelectionState}
                                 activeCitationPath={activeCitationPath}
                                 setActiveCitationPath={setActiveCitationPath}
-                                highlightState={highlightState}
                                 setHighlightState={setHighlightState}
                             />
                         </AccordionDetails>

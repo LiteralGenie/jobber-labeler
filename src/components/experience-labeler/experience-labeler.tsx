@@ -34,7 +34,7 @@ export type ActiveSelectionState = {
     selection: Citation | null
 }
 
-// Citations to preview
+// Citations to preview (fake selection)
 export type HighlightState = Citation[]
 
 export default function ExperienceLabeler() {
@@ -88,10 +88,8 @@ function FormWrapper({
                 {...{
                     form,
                     activeSelectionState,
-                    setActiveSelectionState,
                     activeCitationPath,
                     setActiveCitationPath,
-                    highlightState,
                     setHighlightState,
                 }}
             />

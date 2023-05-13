@@ -141,6 +141,7 @@ export function Component({
                                     <div
                                         className={[
                                             "boxed-input-container",
+                                            // Show focus indicator while user is making a selection
                                             activeCitationPath === `${formPath}.citations.${idx}` &&
                                             activeSelectionState.isSelecting
                                                 ? "focused"
@@ -166,6 +167,7 @@ export function Component({
                                     <div
                                         className={[
                                             "boxed-input-container",
+                                            // Show focus indicator while user is making a selection
                                             activeCitationPath === `${formPath}.citations.${idx}` &&
                                             activeSelectionState.isSelecting
                                                 ? "focused"
