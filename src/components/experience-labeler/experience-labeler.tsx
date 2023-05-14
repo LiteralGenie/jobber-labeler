@@ -67,7 +67,7 @@ function FormWrapper({
     labels: Array<ExperienceLabel.Model>
 }) {
     const defaultLabels = [
-        { category: "general", min: 0, max: 1, conditions: [], citations: [{ start: 0, end: 0 }] },
+        { category: "general", min: 0, max: 1, conditions: [], citations: [{ start: 0, end: 1 }] },
     ]
     const defaultValues = labels.length ? { labels } : { labels: defaultLabels }
     const form = useForm<ExperienceLabelForm>({ defaultValues })

@@ -2,7 +2,6 @@ import { IndeedPost } from "@/models"
 import styles from "./highlighter.module.scss"
 import {
     ActiveSelectionState,
-    Citation,
     CitationPath,
     ExperienceLabelForm,
     HighlightState,
@@ -21,6 +20,8 @@ export type HighlighterProps = {
     highlightState: HighlightState
 }
 
+type Rect = {}
+
 export default function Highlighter({
     form,
     sample,
@@ -30,30 +31,24 @@ export default function Highlighter({
     highlightState,
 }: HighlighterProps) {
     const containerRef = useRef<HTMLDivElement>(null)
-    const textContainerRef = useRef<HTMLDivElement>(null)
+    const textRef = useRef<HTMLDivElement>(null)
     const [focusRects, setFocusRects] = useState<DOMRect[]>([])
     const [hoverRects, setHoverRects] = useState<DOMRect[]>([])
 
     // Handle selections
     useEffect(
-        () => onSelection(textContainerRef, activeSelectionState, form.setValue),
-        [textContainerRef, activeSelectionState, form]
+        () => onSelection(textRef, activeSelectionState, form.setValue),
+        [textRef, activeSelectionState, form]
     )
     useEffect(
-        () => onSelectionStartEnd(textContainerRef, setActiveSelectionState, activeCitationPath),
+        () => onSelectionStartEnd(textRef, setActiveSelectionState, activeCitationPath),
         [setActiveSelectionState, activeCitationPath]
     )
 
     // Handle highlights (fake selections)
     useEffect(() => {
-        onUpdateRects(
-            highlightState,
-            activeSelectionState,
-            textContainerRef,
-            setFocusRects,
-            setHoverRects
-        )
-    }, [highlightState, activeSelectionState, textContainerRef, setFocusRects, setHoverRects])
+        onUpdateRects(highlightState, activeSelectionState, textRef, setFocusRects, setHoverRects)
+    }, [highlightState, activeSelectionState, textRef, setFocusRects, setHoverRects])
 
     // Handle window resize
     useEffect(() => {
@@ -61,7 +56,7 @@ export default function Highlighter({
             onUpdateRects(
                 highlightState,
                 activeSelectionState,
-                textContainerRef,
+                textRef,
                 setFocusRects,
                 setHoverRects
             )
@@ -70,7 +65,7 @@ export default function Highlighter({
         return () => {
             sub.unsubscribe()
         }
-    }, [highlightState, activeSelectionState, textContainerRef, setFocusRects, setHoverRects])
+    }, [highlightState, activeSelectionState, textRef, setFocusRects, setHoverRects])
 
     return (
         <div
@@ -80,19 +75,55 @@ export default function Highlighter({
                 activeCitationPath ? styles.focused : "",
             ].join(" ")}
         >
-            <Paper ref={containerRef} elevation={1} className="text-container">
-                <div ref={textContainerRef}>{sample.textContent}</div>
-                <div className="hover-overlay">
-                    {hoverRects.map((r, idx) => (
-                        <div key={idx} style={convertAbsoluteToRelative(containerRef, r)}></div>
-                    ))}
+            <div className="scroll-container">
+                <Paper ref={containerRef} elevation={1} className="text-container">
+                    <div ref={textRef}>{sample.textContent}</div>
+                    <div className="highlight-overlay">
+                        {hoverRects.map((r, idx) => (
+                            <div
+                                className="hover"
+                                key={idx}
+                                style={convertAbsoluteToRelative(containerRef, r)}
+                            ></div>
+                        ))}
+                        {focusRects.map((r, idx) => (
+                            <div
+                                className="focus"
+                                key={idx}
+                                style={convertAbsoluteToRelative(containerRef, r)}
+                            ></div>
+                        ))}
+                    </div>
+                </Paper>
+                <div className="scroll-marker-container">
+                    {hoverRects.map((r) => {
+                        const { top, height } = convertAbsoluteToPercentage(
+                            containerRef,
+                            textRef,
+                            r
+                        )
+                        return (
+                            <div
+                                className="hover"
+                                style={{ top: `${top * 100}%`, height: `${height * 100}%` }}
+                            ></div>
+                        )
+                    })}
+                    {focusRects.map((r) => {
+                        const { top, height } = convertAbsoluteToPercentage(
+                            containerRef,
+                            textRef,
+                            r
+                        )
+                        return (
+                            <div
+                                className="focus"
+                                style={{ top: `${top * 100}%`, height: `${height * 100}%` }}
+                            ></div>
+                        )
+                    })}
                 </div>
-                <div className="focus-overlay">
-                    {focusRects.map((r, idx) => (
-                        <div key={idx} style={convertAbsoluteToRelative(containerRef, r)}></div>
-                    ))}
-                </div>
-            </Paper>
+            </div>
             <div className="actions">
                 <Button variant="outlined">Done Selecting</Button>
             </div>
@@ -280,5 +311,33 @@ function convertAbsoluteToRelative(anchor: RefObject<HTMLElement>, coords: Coord
         left: relLeft,
         height: coords.height,
         width: coords.width,
+    }
+}
+
+type ScrollMarkerCoords = { top: number; height: number }
+function convertAbsoluteToPercentage(
+    containerRef: RefObject<HTMLElement>,
+    textRef: RefObject<HTMLElement>,
+    coords: Coords
+): ScrollMarkerCoords {
+    const container = containerRef.current
+    if (!container) return coords
+
+    const text = textRef.current
+    if (!text) return coords
+
+    const containerStyles = getComputedStyle(container)
+    const paddingTop = parseInt(containerStyles["paddingTop"])
+
+    const { top: textTop, height: textHeight } = text.getBoundingClientRect()
+
+    const relTop = coords.top - textTop
+    const percentTop = relTop / textHeight
+    const percentHeight = coords.height / textHeight
+    const percentOffset = paddingTop / textHeight
+
+    return {
+        top: percentTop - percentOffset,
+        height: percentHeight + 0.01,
     }
 }

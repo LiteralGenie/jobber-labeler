@@ -3,6 +3,7 @@
         display: flex;
         flex-flow: column;
         height: 100%;
+        position: relative;
         white-space: pre-wrap;
 
         .text-container {
@@ -14,19 +15,18 @@
             position: relative;
         }
 
-        .focus-overlay,
-        .hover-overlay {
+        .highlight-overlay {
             pointer-events: none;
         }
-        .focus-overlay > *,
-        .hover-overlay > * {
+        .highlight-overlay > * {
             position: absolute;
-        }
-        .focus-overlay > * {
-            background-color: hsla(335, 100%, 35%, 0.4);
-        }
-        .hover-overlay > * {
-            background-color: hsla(335, 100%, 35%, 0.24);
+
+            &.focus {
+                background-color: hsla(335, 100%, 35%, 0.4);
+            }
+            &.hover {
+                background-color: hsla(335, 100%, 35%, 0.24);
+            }
         }
 
         .actions {
@@ -40,6 +40,39 @@
                 color: white;
                 padding: 6px 18px;
                 text-align: center;
+            }
+        }
+
+        // Scrollbar should overlap with citation indicators
+        .scroll-container {
+            display: grid;
+            grid-template-columns: 1fr 0;
+        }
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: hsla(210, 13%, 100%, 20%);
+        }
+        .scroll-marker-container {
+            height: calc(80vh - 24px);
+            pointer-events: none;
+            position: absolute;
+            right: 0;
+            top: 24px;
+            width: 12px;
+        }
+        .scroll-marker-container > * {
+            width: 12.5px;
+            right: 1px;
+            top: 50%;
+            position: absolute;
+
+            &.focus {
+                background-color: hsl(0, 0%, 70%);
+            }
+            &.hover {
+                background-color: hsl(0, 0%, 40%);
             }
         }
     }
