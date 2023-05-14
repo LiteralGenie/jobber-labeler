@@ -10,6 +10,7 @@ import {
 import { exhaustMap, fromEvent, map, merge, take, tap } from "rxjs"
 import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from "react"
 import { UseFormReturn, UseFormSetValue } from "react-hook-form"
+import { Button, Paper } from "@mui/material"
 
 export type HighlighterProps = {
     form: UseFormReturn<ExperienceLabelForm>
@@ -17,7 +18,7 @@ export type HighlighterProps = {
     activeSelectionState: ActiveSelectionState
     setActiveSelectionState: Dispatch<SetStateAction<ActiveSelectionState>>
     activeCitationPath: CitationPath | null
-    highlightState: Citation[]
+    highlightState: HighlightState
 }
 
 export default function Highlighter({
@@ -29,7 +30,8 @@ export default function Highlighter({
     highlightState,
 }: HighlighterProps) {
     const containerRef = useRef<HTMLDivElement>(null)
-    const [rects, setRects] = useState<DOMRect[]>([])
+    const [focusRects, setFocusRects] = useState<DOMRect[]>([])
+    const [hoverRects, setHoverRects] = useState<DOMRect[]>([])
 
     // Handle selections
     useEffect(
@@ -43,35 +45,71 @@ export default function Highlighter({
 
     // Handle highlights (fake selections)
     useEffect(() => {
-        onUpdateRects(highlightState, activeSelectionState, containerRef, setRects)
-    }, [highlightState, activeSelectionState, containerRef, setRects])
+        onUpdateRects(
+            highlightState,
+            activeSelectionState,
+            containerRef,
+            setFocusRects,
+            setHoverRects
+        )
+    }, [highlightState, activeSelectionState, containerRef, setFocusRects, setHoverRects])
 
     // Handle window resize
     useEffect(() => {
         const sub = fromEvent(window, "resize").subscribe(() => {
-            onUpdateRects(highlightState, activeSelectionState, containerRef, setRects)
+            onUpdateRects(
+                highlightState,
+                activeSelectionState,
+                containerRef,
+                setFocusRects,
+                setHoverRects
+            )
         })
 
         return () => {
             sub.unsubscribe()
         }
-    }, [highlightState, activeSelectionState, containerRef, setRects])
+    }, [highlightState, activeSelectionState, containerRef, setFocusRects, setHoverRects])
 
     return (
-        <div ref={containerRef} className={styles.container}>
-            {sample.textContent}
-            <div className="highlight-overlay">
-                {rects.map((r, idx) => (
-                    <div
-                        key={idx}
-                        style={{
-                            top: r.top,
-                            left: r.left,
-                            height: r.height,
-                            width: r.width,
-                        }}
-                    ></div>
-                ))}
+        <div
+            className={[
+                styles.container,
+                // Indicate that user selection will have side effects
+                activeCitationPath ? styles.focused : "",
+            ].join(" ")}
+        >
+            <Paper elevation={1} className="text-container">
+                <div ref={containerRef}>{sample.textContent}</div>
+                <div className="hover-overlay">
+                    {hoverRects.map((r, idx) => (
+                        <div
+                            key={idx}
+                            style={{
+                                top: r.top,
+                                left: r.left,
+                                height: r.height,
+                                width: r.width,
+                            }}
+                        ></div>
+                    ))}
+                </div>
+                <div className="focus-overlay">
+                    {focusRects.map((r, idx) => (
+                        <div
+                            key={idx}
+                            style={{
+                                top: r.top,
+                                left: r.left,
+                                height: r.height,
+                                width: r.width,
+                            }}
+                        ></div>
+                    ))}
+                </div>
+            </Paper>
+            <div className="actions">
+                <Button variant="outlined">Done</Button>
             </div>
         </div>
     )
@@ -205,7 +243,8 @@ function onUpdateRects(
     highlightState: HighlightState,
     activeSelectionState: ActiveSelectionState,
     containerRef: RefObject<HTMLElement>,
-    setRects: Dispatch<SetStateAction<DOMRect[]>>
+    setFocusRects: Dispatch<SetStateAction<DOMRect[]>>,
+    setHoverRects: Dispatch<SetStateAction<DOMRect[]>>
 ) {
     if (activeSelectionState.isSelecting) return
 
@@ -215,13 +254,27 @@ function onUpdateRects(
     const sel = window.getSelection() as Selection
     sel.removeAllRanges()
 
-    let rectsUpdate: DOMRect[] = []
-    for (let citation of highlightState) {
+    const { focus, hover } = highlightState
+    if (focus) {
         const range = document.createRange()
-        range.setStart(tgt, citation.start)
-        range.setEnd(tgt, citation.end)
-        rectsUpdate = rectsUpdate.concat([...range.getClientRects()])
+        range.setStart(tgt, focus.start)
+        range.setEnd(tgt, focus.end)
+        setFocusRects([...range.getClientRects()])
+    } else {
+        setFocusRects([])
     }
 
-    setRects(rectsUpdate)
+    if (hover) {
+        const range = document.createRange()
+        range.setStart(tgt, hover.start)
+        range.setEnd(tgt, hover.end)
+        setHoverRects([...range.getClientRects()])
+    } else {
+        setHoverRects([])
+    }
+
+    const isSameSelection = focus?.start === hover?.start && focus?.end === hover?.end
+    if (isSameSelection) {
+        setHoverRects([])
+    }
 }

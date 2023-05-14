@@ -33,7 +33,9 @@ export interface Model {
 }
 
 export function get(conn: sqlite.Database, id: string): Model {
-    return conn.prepare(`SELECT * FROM ${TABLE_ID} WHERE id = ?`).get(id) as RawDb
+    const result = {...conn.prepare(`SELECT * FROM ${TABLE_ID} WHERE id = ?`).get(id) as RawDb}
+    result.textContent = result.textContent + '\n' + result.textContent
+    return result
 }
 
 export function getAllIds(conn: sqlite.Database): { id: string }[] {

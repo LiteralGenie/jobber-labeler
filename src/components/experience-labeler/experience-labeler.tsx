@@ -35,7 +35,10 @@ export type ActiveSelectionState = {
 }
 
 // Citations to preview (fake selection)
-export type HighlightState = Citation[]
+export type HighlightState = {
+    focus: Citation | null
+    hover: Citation | null
+}
 
 export default function ExperienceLabeler() {
     // Load API data
@@ -76,7 +79,7 @@ function FormWrapper({
         selection: null,
     })
 
-    const [highlightState, setHighlightState] = useState<HighlightState>([])
+    const [highlightState, setHighlightState] = useState<HighlightState>({ focus: null, hover: null })
 
     const [activeCitationPath, setActiveCitationPath] = useState<
         `labels.${number}.citations.${number}` | null
@@ -93,7 +96,6 @@ function FormWrapper({
                     setHighlightState,
                 }}
             />
-            <Paper elevation={1} style={{ padding: "24px 48px", height: "100%" }}>
                 <Highlighter
                     {...{
                         form,
@@ -104,7 +106,6 @@ function FormWrapper({
                         highlightState,
                     }}
                 />
-            </Paper>
         </div>
     )
 }

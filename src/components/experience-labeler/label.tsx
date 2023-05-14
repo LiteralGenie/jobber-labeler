@@ -5,6 +5,7 @@ import {
     ExperienceLabelForm,
     ActiveSelectionState,
     CitationPath,
+    HighlightState,
 } from "./experience-labeler"
 import { Button, MenuItem, Select } from "@mui/material"
 import AutocompleteChips from "./autocomplete-chips"
@@ -17,7 +18,7 @@ export type Props = {
     activeSelectionState: ActiveSelectionState
     activeCitationPath: CitationPath | null
     setActiveCitationPath: Dispatch<SetStateAction<CitationPath | null>>
-    setHighlightState: Dispatch<SetStateAction<Citation[]>>
+    setHighlightState: Dispatch<SetStateAction<HighlightState>>
 }
 
 export function Component({
@@ -37,11 +38,17 @@ export function Component({
     const containerEls = useRef<Array<HTMLDivElement | null>>([])
 
     // When a citation is focused, highlight the corresponding text in <Highlighter />
-    const setHighlight = (path: CitationPath) => {
-        setHighlightState([getValues(path)])
+    const setHighlight = (type: "focus" | "hover", path: CitationPath) => {
+        setHighlightState((state) => ({
+            ...state,
+            [type]: getValues(path),
+        }))
     }
-    const clearHighlights = () => {
-        setHighlightState([])
+    const clearHighlights = (type: "focus" | "hover") => {
+        setHighlightState((state) => ({
+            ...state,
+            [type]: null,
+        }))
     }
 
     // Add / delete citations
@@ -117,20 +124,22 @@ export function Component({
                     {citationArray.fields.map((item, idx) => (
                         <div
                             key={item.id}
-                            onMouseEnter={() => setHighlight(`${formPath}.citations.${idx}`)}
+                            onMouseEnter={() =>
+                                setHighlight("hover", `${formPath}.citations.${idx}`)
+                            }
                             onMouseLeave={() => {
-                                if (activeCitationPath === null) clearHighlights()
+                                clearHighlights("hover")
                             }}
                             onFocus={() => {
-                                setHighlight(`${formPath}.citations.${idx}`)
+                                setHighlight("focus", `${formPath}.citations.${idx}`)
                                 setActiveCitationPath(`${formPath}.citations.${idx}`)
                             }}
                             onBlur={() => {
-                                clearHighlights()
+                                clearHighlights("focus")
                                 if (false === activeSelectionState.isSelecting)
                                     setActiveCitationPath(null)
                             }}
-                            onChange={() => setHighlight(`${formPath}.citations.${idx}`)}
+                            onChange={() => setHighlight("focus", `${formPath}.citations.${idx}`)}
                             ref={(el) => (containerEls.current[idx] = el)}
                             className="citations__inputs"
                         >

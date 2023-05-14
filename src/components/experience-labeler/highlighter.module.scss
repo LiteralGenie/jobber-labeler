@@ -1,13 +1,57 @@
 .container {
     :global {
+        display: flex;
+        flex-flow: column;
+        height: 100%;
         white-space: pre-wrap;
 
-        .highlight-overlay {
+        .text-container {
+            border: dashed;
+            border-color: hsla(0, 0, 100%, 0);
+            max-height: 80vh;
+            overflow: auto;
+            padding: 24px 48px;
+        }
+
+        .focus-overlay,
+        .hover-overlay {
             pointer-events: none;
         }
-        .highlight-overlay > * {
-            background-color: hsla(335, 100%, 35%, 0.32);
+        .focus-overlay > *,
+        .hover-overlay > * {
             position: absolute;
+        }
+        .focus-overlay > * {
+            background-color: hsla(335, 100%, 35%, 0.32);
+        }
+        .hover-overlay > * {
+            background-color: hsla(219, 100%, 35%, 0.32);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 6px;
+            margin-right: 6px;
+            visibility: hidden;
+
+            button {
+                color: white;
+                padding: 6px 18px;
+                text-align: center;
+            }
+        }
+    }
+}
+
+.focused {
+    :global {
+        .text-container {
+            border-color: hsla(0, 0, 100%, 0.5);
+        }
+
+        .actions {
+            visibility: visible;
         }
     }
 }

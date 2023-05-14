@@ -5,6 +5,7 @@ import {
     ActiveSelectionState,
     CitationPath,
     Citation,
+    HighlightState,
 } from "./experience-labeler"
 import { Dispatch, SetStateAction, useRef, useState } from "react"
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Paper } from "@mui/material"
@@ -18,7 +19,7 @@ export type ExperienceFormProps = {
     activeSelectionState: ActiveSelectionState
     activeCitationPath: CitationPath | null
     setActiveCitationPath: Dispatch<SetStateAction<CitationPath | null>>
-    setHighlightState: Dispatch<SetStateAction<Citation[]>>
+    setHighlightState: Dispatch<SetStateAction<HighlightState>>
 }
 
 export default function ExperienceForm({
