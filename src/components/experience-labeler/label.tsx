@@ -200,12 +200,11 @@ export function Component({
                             </div>
 
                             <div>
-                                <IconButton onClick={() => onDeleteCitation(idx)}>
-                                    <CloseIcon
-                                        className={["delete", idx === 0 ? "disabled" : ""].join(
-                                            " "
-                                        )}
-                                    />
+                                <IconButton
+                                    className={idx === 0 ? "disabled" : ""}
+                                    onClick={() => onDeleteCitation(idx)}
+                                >
+                                    <CloseIcon className={"delete"} />
                                 </IconButton>
                             </div>
                         </div>

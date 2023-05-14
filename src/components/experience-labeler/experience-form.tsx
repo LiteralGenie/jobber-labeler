@@ -90,7 +90,6 @@ export default function ExperienceForm({
         setForceVisiblePaths((state) => {
             const update = new Set(state)
             update.has(path) ? update.delete(path) : update.add(path)
-            console.log("update", path, [...update])
             return update
         })
     }
@@ -120,7 +119,6 @@ export default function ExperienceForm({
                 lbl.citations.map((c, idx) => `labels.${lblIdx}.citations.${idx}` as const)
             )
         setHighlightState((state) => ({ ...state, forceVisible: citationPaths }))
-        console.log("citations", citationPaths)
     }, [getValues, forceVisiblePaths, setHighlightState])
 
     const getLabelSummary = (idx: number) => {
