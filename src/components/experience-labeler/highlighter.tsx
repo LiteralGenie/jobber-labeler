@@ -20,8 +20,6 @@ export type HighlighterProps = {
     highlightState: HighlightState
 }
 
-type Rect = {}
-
 export default function Highlighter({
     form,
     sample,
@@ -186,6 +184,9 @@ function onSelection(
             if (selection.start === selection.end) {
                 return
             }
+            if (selection.start > selection.end) {
+                ;[selection.start, selection.end] = [selection.end, selection.start]
+            }
 
             // Notify of selection change
             return setFormValue(activeSelectionState.activeCitation.path, selection)
@@ -334,10 +335,12 @@ function convertAbsoluteToPercentage(
     const relTop = coords.top - textTop
     const percentTop = relTop / textHeight
     const percentHeight = coords.height / textHeight
+    // Scrollbar accounts for padding but percentTop does not
     const percentOffset = paddingTop / textHeight
 
     return {
         top: percentTop - percentOffset,
+        // Add tiny additional height so that consecutive lines don't leave gaps between corresponding indicators
         height: percentHeight + 0.01,
     }
 }
