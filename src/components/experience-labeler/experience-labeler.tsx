@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form"
 
 export type Citation = { start: number; end: number }
 export type CitationPath = `labels.${number}.citations.${number}`
+export type LabelPath = `labels.${number}`
 
 export type ExperienceLabelForm = {
     labels: Array<{
@@ -35,8 +36,9 @@ export type ActiveSelectionState = {
 
 // Citations to preview (fake selection)
 export type HighlightState = {
-    focus: Citation | null
-    hover: Citation | null
+    focus: CitationPath | null
+    hover: CitationPath | null
+    forceVisible: CitationPath[]
 }
 
 export default function ExperienceLabeler() {
@@ -81,6 +83,7 @@ function FormWrapper({
     const [highlightState, setHighlightState] = useState<HighlightState>({
         focus: null,
         hover: null,
+        forceVisible: [],
     })
 
     const [activeCitationPath, setActiveCitationPath] = useState<
@@ -95,6 +98,7 @@ function FormWrapper({
                     activeSelectionState,
                     activeCitationPath,
                     setActiveCitationPath,
+                    highlightState,
                     setHighlightState,
                 }}
             />

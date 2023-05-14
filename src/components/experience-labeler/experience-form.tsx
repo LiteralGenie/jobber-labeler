@@ -5,8 +5,10 @@ import {
     ActiveSelectionState,
     CitationPath,
     HighlightState,
+    LabelPath,
+    Citation,
 } from "./experience-labeler"
-import { Dispatch, SetStateAction, useRef, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
 import {
     Accordion,
     AccordionDetails,
@@ -19,12 +21,14 @@ import { toTitleCase } from "@/utils"
 import * as Label from "./label"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import DeleteIcon from "@mui/icons-material/Delete"
+import VisibilityIcon from "@mui/icons-material/Visibility"
 
 export type ExperienceFormProps = {
     form: UseFormReturn<ExperienceLabelForm>
     activeSelectionState: ActiveSelectionState
     activeCitationPath: CitationPath | null
     setActiveCitationPath: Dispatch<SetStateAction<CitationPath | null>>
+    highlightState: HighlightState
     setHighlightState: Dispatch<SetStateAction<HighlightState>>
 }
 
@@ -33,9 +37,10 @@ export default function ExperienceForm({
     activeSelectionState,
     activeCitationPath,
     setActiveCitationPath,
+    highlightState,
     setHighlightState,
 }: ExperienceFormProps) {
-    const { control, getValues } = form
+    const { control, getValues, watch } = form
     const labelFields = useFieldArray({
         control,
         name: "labels",
@@ -63,12 +68,14 @@ export default function ExperienceForm({
     }
 
     const onDeleteLabel = (idx: number) => {
+        // Close the panel
         if (openPanel === idx) {
             setOpenPanel(null)
         } else if (openPanel !== null && openPanel > idx) {
             setOpenPanel(openPanel - 1)
         }
 
+        // Update form state
         labelFields.remove(idx)
     }
 
@@ -76,6 +83,45 @@ export default function ExperienceForm({
     const onAccordionToggle = (isExpanded: boolean, idx: number) => {
         setOpenPanel(isExpanded ? idx : null)
     }
+
+    // Handle button that toggles all citations on / off
+    const [forceVisiblePaths, setForceVisiblePaths] = useState<Set<LabelPath>>(new Set())
+    const onToggleVisibility = (path: LabelPath) => {
+        setForceVisiblePaths((state) => {
+            const update = new Set(state)
+            update.has(path) ? update.delete(path) : update.add(path)
+            console.log("update", path, [...update])
+            return update
+        })
+    }
+    // Handle deleted labels
+    useEffect(() => {
+        const sub = watch(({ labels }) => {
+            if (!labels) return
+
+            const paths = labels.map((_, idx) => `labels.${idx}` as const)
+            const forceVisibleUpdate = paths.filter((p) => forceVisiblePaths.has(p))
+            if (forceVisibleUpdate.length !== Array(forceVisiblePaths).length) {
+                setForceVisiblePaths(new Set(forceVisibleUpdate))
+            }
+        })
+
+        return () => {
+            sub.unsubscribe()
+        }
+    }, [watch, forceVisiblePaths, setForceVisiblePaths])
+    // Update rects in highlightState.forceVisible
+    useEffect(() => {
+        const labels = getValues("labels")
+        const citationPaths = labels
+            .map((lbl, idx) => [lbl, idx] as const)
+            .filter(([_, idx]) => forceVisiblePaths.has(`labels.${idx}` as const))
+            .flatMap(([lbl, lblIdx]) =>
+                lbl.citations.map((c, idx) => `labels.${lblIdx}.citations.${idx}` as const)
+            )
+        setHighlightState((state) => ({ ...state, forceVisible: citationPaths }))
+        console.log("citations", citationPaths)
+    }, [getValues, forceVisiblePaths, setHighlightState])
 
     const getLabelSummary = (idx: number) => {
         const d = getValues(`labels.${idx}`)
@@ -118,6 +164,16 @@ export default function ExperienceForm({
                             <div className="actions">
                                 <IconButton onClick={() => onDeleteLabel(idx)}>
                                     <DeleteIcon className="delete" />
+                                </IconButton>
+                                <IconButton onClick={() => onToggleVisibility(`labels.${idx}`)}>
+                                    <VisibilityIcon
+                                        className={[
+                                            "eyeball",
+                                            forceVisiblePaths.has(`labels.${idx}`)
+                                                ? "active"
+                                                : "inactive",
+                                        ].join(" ")}
+                                    />
                                 </IconButton>
                                 <IconButton className="expand">
                                     <ExpandMoreIcon />

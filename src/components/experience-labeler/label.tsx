@@ -28,7 +28,7 @@ export function Component({
     setActiveCitationPath,
     setHighlightState,
 }: Props) {
-    const { control, getValues } = form
+    const { control } = form
 
     const citationArray = useFieldArray({
         control: form.control,
@@ -40,7 +40,7 @@ export function Component({
     const setHighlight = (type: "focus" | "hover", path: CitationPath) => {
         setHighlightState((state) => ({
             ...state,
-            [type]: getValues(path),
+            [type]: path,
         }))
     }
     const clearHighlights = (type: "focus" | "hover") => {

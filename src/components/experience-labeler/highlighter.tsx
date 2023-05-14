@@ -45,13 +45,21 @@ export default function Highlighter({
 
     // Handle highlights (fake selections)
     useEffect(() => {
-        onUpdateRects(highlightState, activeSelectionState, textRef, setFocusRects, setHoverRects)
-    }, [highlightState, activeSelectionState, textRef, setFocusRects, setHoverRects])
+        onUpdateRects(
+            form,
+            highlightState,
+            activeSelectionState,
+            textRef,
+            setFocusRects,
+            setHoverRects
+        )
+    }, [form, highlightState, activeSelectionState, textRef, setFocusRects, setHoverRects])
 
     // Handle window resize
     useEffect(() => {
         const sub = fromEvent(window, "resize").subscribe(() => {
             onUpdateRects(
+                form,
                 highlightState,
                 activeSelectionState,
                 textRef,
@@ -63,7 +71,7 @@ export default function Highlighter({
         return () => {
             sub.unsubscribe()
         }
-    }, [highlightState, activeSelectionState, textRef, setFocusRects, setHoverRects])
+    }, [form, highlightState, activeSelectionState, textRef, setFocusRects, setHoverRects])
 
     return (
         <div
@@ -79,22 +87,22 @@ export default function Highlighter({
                     <div className="highlight-overlay">
                         {hoverRects.map((r, idx) => (
                             <div
-                                className="hover"
                                 key={idx}
+                                className="hover"
                                 style={convertAbsoluteToRelative(containerRef, r)}
                             ></div>
                         ))}
                         {focusRects.map((r, idx) => (
                             <div
-                                className="focus"
                                 key={idx}
+                                className="focus"
                                 style={convertAbsoluteToRelative(containerRef, r)}
                             ></div>
                         ))}
                     </div>
                 </Paper>
                 <div className="scroll-marker-container">
-                    {hoverRects.map((r) => {
+                    {hoverRects.map((r, idx) => {
                         const { top, height } = convertAbsoluteToPercentage(
                             containerRef,
                             textRef,
@@ -102,12 +110,13 @@ export default function Highlighter({
                         )
                         return (
                             <div
+                                key={idx}
                                 className="hover"
                                 style={{ top: `${top * 100}%`, height: `${height * 100}%` }}
                             ></div>
                         )
                     })}
-                    {focusRects.map((r) => {
+                    {focusRects.map((r, idx) => {
                         const { top, height } = convertAbsoluteToPercentage(
                             containerRef,
                             textRef,
@@ -115,6 +124,7 @@ export default function Highlighter({
                         )
                         return (
                             <div
+                                key={idx}
                                 className="focus"
                                 style={{ top: `${top * 100}%`, height: `${height * 100}%` }}
                             ></div>
@@ -257,6 +267,7 @@ function onSelectionStartEnd(
 }
 
 function onUpdateRects(
+    form: UseFormReturn<ExperienceLabelForm>,
     highlightState: HighlightState,
     activeSelectionState: ActiveSelectionState,
     containerRef: RefObject<HTMLElement>,
@@ -268,31 +279,44 @@ function onUpdateRects(
     const tgt = containerRef.current?.childNodes[0]
     if (!tgt) return
 
+    // Clear old rects
     const sel = window.getSelection() as Selection
     sel.removeAllRanges()
+    setFocusRects([])
+    setHoverRects([])
 
-    const { focus, hover } = highlightState
-    if (focus) {
+    // Override focus / hover rects
+    const { focus, hover, forceVisible } = highlightState
+    const focusPath = focus && !forceVisible.includes(focus) ? focus : null
+    const hoverPath = hover && !forceVisible.includes(hover) ? hover : null
+
+    // Check for override
+    if (forceVisible.length) {
+        const forcedRects = new Set<DOMRect>()
+        const rects = highlightState.forceVisible.flatMap((path) => {
+            const citation = form.getValues(path)
+            const range = document.createRange()
+            range.setStart(tgt, citation.start)
+            range.setEnd(tgt, citation.end)
+            Array.from(range.getClientRects()).forEach((r) => forcedRects.add(r))
+        })
+        setFocusRects(Array.from(forcedRects))
+    }
+
+    // Draw new rects
+    if (focusPath) {
+        const citation = form.getValues(focusPath)
         const range = document.createRange()
-        range.setStart(tgt, focus.start)
-        range.setEnd(tgt, focus.end)
+        range.setStart(tgt, citation.start)
+        range.setEnd(tgt, citation.end)
         setFocusRects([...range.getClientRects()])
-    } else {
-        setFocusRects([])
     }
-
-    if (hover) {
+    if (hoverPath && hoverPath !== focusPath) {
+        const citation = form.getValues(hoverPath)
         const range = document.createRange()
-        range.setStart(tgt, hover.start)
-        range.setEnd(tgt, hover.end)
+        range.setStart(tgt, citation.start)
+        range.setEnd(tgt, citation.end)
         setHoverRects([...range.getClientRects()])
-    } else {
-        setHoverRects([])
-    }
-
-    const isSameSelection = focus?.start === hover?.start && focus?.end === hover?.end
-    if (isSameSelection) {
-        setHoverRects([])
     }
 }
 
