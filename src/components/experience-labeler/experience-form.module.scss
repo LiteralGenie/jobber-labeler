@@ -62,7 +62,6 @@
             .actions {
                 align-items: center;
                 display: flex;
-                gap: 12px;
                 padding-right: 16px;
 
                 & > * {
@@ -83,6 +82,7 @@
         // Trashcan icon is too big relative to expand icon
         .actions .delete {
             transform: scale(0.8);
+            transform-origin: center;
         }
     }
 }

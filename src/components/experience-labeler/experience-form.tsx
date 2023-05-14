@@ -4,11 +4,17 @@ import {
     ExperienceLabelForm,
     ActiveSelectionState,
     CitationPath,
-    Citation,
     HighlightState,
 } from "./experience-labeler"
 import { Dispatch, SetStateAction, useRef, useState } from "react"
-import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Paper } from "@mui/material"
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Box,
+    Button,
+    IconButton,
+} from "@mui/material"
 import { toTitleCase } from "@/utils"
 import * as Label from "./label"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
@@ -110,8 +116,12 @@ export default function ExperienceForm({
                                 <span className="summary-label">{getLabelSummary(idx)}</span>
                             </AccordionSummary>
                             <div className="actions">
-                                <DeleteIcon onClick={() => onDeleteLabel(idx)} className="delete" />
-                                <ExpandMoreIcon className="expand" />
+                                <IconButton onClick={() => onDeleteLabel(idx)}>
+                                    <DeleteIcon className="delete" />
+                                </IconButton>
+                                <IconButton className="expand">
+                                    <ExpandMoreIcon />
+                                </IconButton>
                             </div>
                         </Box>
                         <AccordionDetails>

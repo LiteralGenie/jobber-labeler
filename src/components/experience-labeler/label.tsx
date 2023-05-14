@@ -6,7 +6,7 @@ import {
     CitationPath,
     HighlightState,
 } from "./experience-labeler"
-import { Button, MenuItem, Select } from "@mui/material"
+import { Button, IconButton, MenuItem, Select } from "@mui/material"
 import AutocompleteChips from "./autocomplete-chips"
 import styles from "./label.module.scss"
 import CloseIcon from "@mui/icons-material/Close"
@@ -140,66 +140,73 @@ export function Component({
                             }}
                             onChange={() => setHighlight("focus", `${formPath}.citations.${idx}`)}
                             ref={(el) => (containerEls.current[idx] = el)}
-                            className="citations__inputs"
+                            className="citations__row"
                         >
-                            <Controller
-                                name={`${formPath}.citations.${idx}.start` as any}
-                                control={control}
-                                render={({ field }) => (
-                                    <div
-                                        className={[
-                                            "boxed-input-container",
-                                            // Show focus indicator while user is making a selection
-                                            activeCitationPath === `${formPath}.citations.${idx}` &&
-                                            activeSelectionState.isSelecting
-                                                ? "focused"
-                                                : "",
-                                        ].join(" ")}
-                                    >
-                                        <div className="boxed-field-label">
-                                            <span>Start</span>
+                            <div className="citations__inputs">
+                                <Controller
+                                    name={`${formPath}.citations.${idx}.start` as any}
+                                    control={control}
+                                    render={({ field }) => (
+                                        <div
+                                            className={[
+                                                "boxed-input-container",
+                                                // Show focus indicator while user is making a selection
+                                                activeCitationPath ===
+                                                    `${formPath}.citations.${idx}` &&
+                                                activeSelectionState.isSelecting
+                                                    ? "focused"
+                                                    : "",
+                                            ].join(" ")}
+                                        >
+                                            <div className="boxed-field-label">
+                                                <span>Start</span>
+                                            </div>
+                                            <input
+                                                placeholder="Start"
+                                                type="number"
+                                                min="0"
+                                                {...field}
+                                            />
                                         </div>
-                                        <input
-                                            placeholder="Start"
-                                            type="number"
-                                            min="0"
-                                            {...field}
-                                        />
-                                    </div>
-                                )}
-                            />
-                            <Controller
-                                name={`${formPath}.citations.${idx}.end` as any}
-                                control={control}
-                                render={({ field }) => (
-                                    <div
-                                        className={[
-                                            "boxed-input-container",
-                                            // Show focus indicator while user is making a selection
-                                            activeCitationPath === `${formPath}.citations.${idx}` &&
-                                            activeSelectionState.isSelecting
-                                                ? "focused"
-                                                : "",
-                                        ].join(" ")}
-                                    >
-                                        <div className="boxed-field-label">
-                                            <span>Stop</span>
+                                    )}
+                                />
+                                <Controller
+                                    name={`${formPath}.citations.${idx}.end` as any}
+                                    control={control}
+                                    render={({ field }) => (
+                                        <div
+                                            className={[
+                                                "boxed-input-container",
+                                                // Show focus indicator while user is making a selection
+                                                activeCitationPath ===
+                                                    `${formPath}.citations.${idx}` &&
+                                                activeSelectionState.isSelecting
+                                                    ? "focused"
+                                                    : "",
+                                            ].join(" ")}
+                                        >
+                                            <div className="boxed-field-label">
+                                                <span>Stop</span>
+                                            </div>
+                                            <input
+                                                placeholder="Stop"
+                                                type="number"
+                                                min="0"
+                                                {...field}
+                                            />
                                         </div>
-                                        <input
-                                            placeholder="Stop"
-                                            type="number"
-                                            min="0"
-                                            {...field}
-                                        />
-                                    </div>
-                                )}
-                            />
+                                    )}
+                                />
+                            </div>
 
                             <div>
-                                <CloseIcon
-                                    onClick={() => onDeleteCitation(idx)}
-                                    className={["delete", idx === 0 ? "disabled" : ""].join(" ")}
-                                ></CloseIcon>
+                                <IconButton onClick={() => onDeleteCitation(idx)}>
+                                    <CloseIcon
+                                        className={["delete", idx === 0 ? "disabled" : ""].join(
+                                            " "
+                                        )}
+                                    />
+                                </IconButton>
                             </div>
                         </div>
                     ))}
