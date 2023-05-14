@@ -28,7 +28,6 @@ export type ExperienceFormProps = {
     activeSelectionState: ActiveSelectionState
     activeCitationPath: CitationPath | null
     setActiveCitationPath: Dispatch<SetStateAction<CitationPath | null>>
-    highlightState: HighlightState
     setHighlightState: Dispatch<SetStateAction<HighlightState>>
 }
 
@@ -37,7 +36,6 @@ export default function ExperienceForm({
     activeSelectionState,
     activeCitationPath,
     setActiveCitationPath,
-    highlightState,
     setHighlightState,
 }: ExperienceFormProps) {
     const { control, getValues, watch } = form
@@ -173,7 +171,10 @@ export default function ExperienceForm({
                                         ].join(" ")}
                                     />
                                 </IconButton>
-                                <IconButton className="expand">
+                                <IconButton
+                                    className="expand"
+                                    onClick={() => setOpenPanel(openPanel === null ? idx : null)}
+                                >
                                     <ExpandMoreIcon />
                                 </IconButton>
                             </div>

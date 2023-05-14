@@ -98,7 +98,6 @@ function FormWrapper({
                     activeSelectionState,
                     activeCitationPath,
                     setActiveCitationPath,
-                    highlightState,
                     setHighlightState,
                 }}
             />
