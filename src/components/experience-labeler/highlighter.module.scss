@@ -11,6 +11,7 @@
             max-height: 80vh;
             overflow: auto;
             padding: 24px 48px;
+            position: relative;
         }
 
         .focus-overlay,
@@ -22,16 +23,16 @@
             position: absolute;
         }
         .focus-overlay > * {
-            background-color: hsla(335, 100%, 35%, 0.32);
+            background-color: hsla(335, 100%, 35%, 0.4);
         }
         .hover-overlay > * {
-            background-color: hsla(219, 100%, 35%, 0.32);
+            background-color: hsla(335, 100%, 35%, 0.24);
         }
 
         .actions {
             display: flex;
             justify-content: flex-end;
-            margin-top: 6px;
+            margin-top: 8px;
             margin-right: 6px;
             visibility: hidden;
 

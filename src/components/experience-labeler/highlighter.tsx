@@ -30,16 +30,17 @@ export default function Highlighter({
     highlightState,
 }: HighlighterProps) {
     const containerRef = useRef<HTMLDivElement>(null)
+    const textContainerRef = useRef<HTMLDivElement>(null)
     const [focusRects, setFocusRects] = useState<DOMRect[]>([])
     const [hoverRects, setHoverRects] = useState<DOMRect[]>([])
 
     // Handle selections
     useEffect(
-        () => onSelection(containerRef, activeSelectionState, form.setValue),
-        [containerRef, activeSelectionState, form]
+        () => onSelection(textContainerRef, activeSelectionState, form.setValue),
+        [textContainerRef, activeSelectionState, form]
     )
     useEffect(
-        () => onSelectionStartEnd(containerRef, setActiveSelectionState, activeCitationPath),
+        () => onSelectionStartEnd(textContainerRef, setActiveSelectionState, activeCitationPath),
         [setActiveSelectionState, activeCitationPath]
     )
 
@@ -48,11 +49,11 @@ export default function Highlighter({
         onUpdateRects(
             highlightState,
             activeSelectionState,
-            containerRef,
+            textContainerRef,
             setFocusRects,
             setHoverRects
         )
-    }, [highlightState, activeSelectionState, containerRef, setFocusRects, setHoverRects])
+    }, [highlightState, activeSelectionState, textContainerRef, setFocusRects, setHoverRects])
 
     // Handle window resize
     useEffect(() => {
@@ -60,7 +61,7 @@ export default function Highlighter({
             onUpdateRects(
                 highlightState,
                 activeSelectionState,
-                containerRef,
+                textContainerRef,
                 setFocusRects,
                 setHoverRects
             )
@@ -69,7 +70,7 @@ export default function Highlighter({
         return () => {
             sub.unsubscribe()
         }
-    }, [highlightState, activeSelectionState, containerRef, setFocusRects, setHoverRects])
+    }, [highlightState, activeSelectionState, textContainerRef, setFocusRects, setHoverRects])
 
     return (
         <div
@@ -79,37 +80,21 @@ export default function Highlighter({
                 activeCitationPath ? styles.focused : "",
             ].join(" ")}
         >
-            <Paper elevation={1} className="text-container">
-                <div ref={containerRef}>{sample.textContent}</div>
+            <Paper ref={containerRef} elevation={1} className="text-container">
+                <div ref={textContainerRef}>{sample.textContent}</div>
                 <div className="hover-overlay">
                     {hoverRects.map((r, idx) => (
-                        <div
-                            key={idx}
-                            style={{
-                                top: r.top,
-                                left: r.left,
-                                height: r.height,
-                                width: r.width,
-                            }}
-                        ></div>
+                        <div key={idx} style={convertAbsoluteToRelative(containerRef, r)}></div>
                     ))}
                 </div>
                 <div className="focus-overlay">
                     {focusRects.map((r, idx) => (
-                        <div
-                            key={idx}
-                            style={{
-                                top: r.top,
-                                left: r.left,
-                                height: r.height,
-                                width: r.width,
-                            }}
-                        ></div>
+                        <div key={idx} style={convertAbsoluteToRelative(containerRef, r)}></div>
                     ))}
                 </div>
             </Paper>
             <div className="actions">
-                <Button variant="outlined">Done</Button>
+                <Button variant="outlined">Done Selecting</Button>
             </div>
         </div>
     )
@@ -276,5 +261,24 @@ function onUpdateRects(
     const isSameSelection = focus?.start === hover?.start && focus?.end === hover?.end
     if (isSameSelection) {
         setHoverRects([])
+    }
+}
+
+type Coords = { top: number; left: number; height: number; width: number }
+function convertAbsoluteToRelative(anchor: RefObject<HTMLElement>, coords: Coords): Coords {
+    const tgt = anchor.current
+    if (!tgt) return coords
+
+    const { top: anchorTop, left: anchorLeft } = tgt.getBoundingClientRect()
+    const { scrollTop, scrollLeft } = tgt
+
+    const relTop = coords.top + scrollTop - anchorTop
+    const relLeft = coords.left + scrollLeft - anchorLeft
+
+    return {
+        top: relTop,
+        left: relLeft,
+        height: coords.height,
+        width: coords.width,
     }
 }

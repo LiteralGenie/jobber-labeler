@@ -8,7 +8,6 @@ import { ReactNode, useState } from "react"
 import Highlighter from "./highlighter"
 import ExperienceForm from "./experience-form"
 import { useForm } from "react-hook-form"
-import { Paper } from "@mui/material"
 
 export type Citation = { start: number; end: number }
 export type CitationPath = `labels.${number}.citations.${number}`
@@ -79,7 +78,10 @@ function FormWrapper({
         selection: null,
     })
 
-    const [highlightState, setHighlightState] = useState<HighlightState>({ focus: null, hover: null })
+    const [highlightState, setHighlightState] = useState<HighlightState>({
+        focus: null,
+        hover: null,
+    })
 
     const [activeCitationPath, setActiveCitationPath] = useState<
         `labels.${number}.citations.${number}` | null
@@ -96,16 +98,16 @@ function FormWrapper({
                     setHighlightState,
                 }}
             />
-                <Highlighter
-                    {...{
-                        form,
-                        sample,
-                        activeSelectionState,
-                        setActiveSelectionState,
-                        activeCitationPath,
-                        highlightState,
-                    }}
-                />
+            <Highlighter
+                {...{
+                    form,
+                    sample,
+                    activeSelectionState,
+                    setActiveSelectionState,
+                    activeCitationPath,
+                    highlightState,
+                }}
+            />
         </div>
     )
 }
