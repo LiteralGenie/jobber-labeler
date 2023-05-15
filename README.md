@@ -12,9 +12,9 @@ This repo is part of a larger collection:
   - [jobber-labler](https://github.com/LiteralGenie/jobber-labeler/) 
     - (this repo)
   - jobber-trainer 
-    - (TODO) Fine-tunes LLM to extract info into a structured format (eg minimum years of experience, location, etc)
+    - (TODO) Fine-tunes an LLM to extract info into a structured format (eg minimum years of experience, location, etc)
   - jobber
-    - (TODO) Userscript to display summary of job listing.
+    - (TODO) Userscript to insert summary next to job listings on Indeed.
 
 # Features
 
