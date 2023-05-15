@@ -4,7 +4,7 @@ Tool for annotating the text from job descriptions.
 
 This repo is part of a larger collection:
   - [jobber-collector-server](https://github.com/LiteralGenie/jobber-collector-server) / [jobber-collector-client](https://github.com/LiteralGenie/jobber-collector-client)
-    - Tool for scraping job posts from Indeed. The client is a userscript that sends data to a Deno server / sqlite database.
+    - Tool for scraping job posts from Indeed. The client is a userscript that automatically sends data to a Deno server / sqlite database as you browse Indeed listings.
   - [jobber-labler](https://github.com/LiteralGenie/jobber-labeler/) 
     - (this repo)
   - jobber-trainer 
